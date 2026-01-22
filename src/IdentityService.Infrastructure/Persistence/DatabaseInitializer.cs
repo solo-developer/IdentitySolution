@@ -225,6 +225,29 @@ public class DatabaseInitializer
             },
             new OpenIddictApplicationDescriptor
             {
+                ClientId = "ui-client-2",
+                ClientSecret = "ui-secret-2",
+                DisplayName = "Second UI Service",
+                ClientType = OpenIddictConstants.ClientTypes.Confidential,
+                PostLogoutRedirectUris = { new Uri("https://localhost:7160/signout-callback-oidc") },
+                RedirectUris = { new Uri("https://localhost:7160/signin-oidc") },
+                Permissions =
+                {
+                    OpenIddictConstants.Permissions.Endpoints.Authorization,
+                    OpenIddictConstants.Permissions.Endpoints.Logout,
+                    OpenIddictConstants.Permissions.Endpoints.Token,
+                    OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
+                    OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+                    OpenIddictConstants.Permissions.ResponseTypes.Code,
+                    OpenIddictConstants.Permissions.Scopes.Email,
+                    OpenIddictConstants.Permissions.Prefixes.Scope + "openid",
+                    OpenIddictConstants.Permissions.Scopes.Profile,
+                    OpenIddictConstants.Permissions.Scopes.Roles,
+                    OpenIddictConstants.Permissions.Prefixes.Scope + "api"
+                }
+            },
+            new OpenIddictApplicationDescriptor
+            {
                 ClientId = "recovery-project",
                 ClientSecret = "recovery-secret",
                 DisplayName = "Recovery Project Service",

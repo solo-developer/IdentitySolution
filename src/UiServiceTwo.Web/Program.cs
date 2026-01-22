@@ -16,19 +16,19 @@ builder.Services.AddAuthentication(options =>
 })
 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
-    options.Cookie.Name = "SSO.Cookie";
+    options.Cookie.Name = "SSO.Cookie.Two"; // Distinct cookie name
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 })
 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
 {
     options.Authority = builder.Configuration["IdentityService:Authority"] ?? "https://localhost:7242";
-    options.ClientId = "ui-client";
-    options.ClientSecret = "ui-secret";
+    options.ClientId = "ui-client-2"; // Distinct client id
+    options.ClientSecret = "ui-secret-2";
     options.ResponseType = "code";
     options.ResponseMode = "query";
     
-    options.SaveTokens = true; // This ensures tokens (access, id, refresh) are stored in the authentication cookie
+    options.SaveTokens = true;
     options.GetClaimsFromUserInfoEndpoint = true;
     
     options.Scope.Add("openid");
@@ -50,9 +50,6 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddMassTransit(x =>
 {
     x.SetKebabCaseEndpointNameFormatter();
-
-    x.AddConsumer<UiService.Web.Consumers.UserLoggedOutConsumer>();
-
     x.UsingRabbitMq((context, cfg) =>
     {
         var rabbitMqHost = builder.Configuration["RabbitMq:Host"] ?? "localhost";
@@ -61,17 +58,13 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-// Configure Service Discovery & Data Seeding
+// Configure Service Discovery
 builder.Services.AddConsulConfig(builder.Configuration);
-builder.Services.AddScoped<IdentitySolution.ServiceDiscovery.IModuleRegistrationService, IdentitySolution.ServiceDiscovery.ModuleRegistrationService>();
-builder.Services.AddHostedService<UiService.Web.Workers.ServiceRegistrationWorker>();
 
 var app = builder.Build();
 
-// Use Service Discovery
 app.UseConsul();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -80,9 +73,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
