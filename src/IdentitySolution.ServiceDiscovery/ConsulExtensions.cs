@@ -28,7 +28,7 @@ public static class ConsulExtensions
 
         var config = app.ApplicationServices.GetRequiredService<IConfiguration>();
         var serviceName = config["Consul:ServiceName"] ?? "UnknownService";
-        var servicePort = config.GetValue<int>("Consul:ServicePort", 7200);
+        var servicePort = int.Parse(config["Consul:ServicePort"] ?? "7200");
         var baseUrl = config["IdentityClient:BaseUrl"] ?? $"https://localhost:{servicePort}";
 
         var registration = new AgentServiceRegistration()

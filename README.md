@@ -51,7 +51,6 @@ protected override async Task ExecuteAsync(CancellationToken stoppingToken)
             DisplayName = _configuration["ServiceName"],
             RedirectUris = { $"{baseUrl}/signin-oidc" },
             PostLogoutRedirectUris = { $"{baseUrl}/signout-callback-oidc" },
-            FrontChannelLogoutUri = $"{baseUrl}/signout-oidc",
             HealthCheckUrl = $"{baseUrl}/health"
         }
     };

@@ -208,7 +208,6 @@ public class DatabaseInitializer
                 ClientType = OpenIddictConstants.ClientTypes.Confidential,
                 PostLogoutRedirectUris = { new Uri("https://localhost:7150/signout-callback-oidc") },
                 RedirectUris = { new Uri("https://localhost:7150/signin-oidc") },
-                FrontChannelLogoutUri = new Uri("https://localhost:7150/signout-oidc"),
                 Permissions =
                 {
                     OpenIddictConstants.Permissions.Endpoints.Authorization,
@@ -232,7 +231,6 @@ public class DatabaseInitializer
                 ClientType = OpenIddictConstants.ClientTypes.Confidential,
                 PostLogoutRedirectUris = { new Uri("https://localhost:7160/signout-callback-oidc") },
                 RedirectUris = { new Uri("https://localhost:7160/signin-oidc") },
-                FrontChannelLogoutUri = new Uri("https://localhost:7160/signout-oidc"),
                 Permissions =
                 {
                     OpenIddictConstants.Permissions.Endpoints.Authorization,

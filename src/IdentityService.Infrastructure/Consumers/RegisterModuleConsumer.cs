@@ -6,6 +6,7 @@ using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using OpenIddict.Abstractions;
 
 namespace IdentityService.Infrastructure.Consumers;
 
@@ -119,10 +120,6 @@ public class RegisterModuleConsumer : IConsumer<IRegisterModule>
 
                 foreach (var uri in clientReq.RedirectUris) descriptor.RedirectUris.Add(new Uri(uri));
                 foreach (var uri in clientReq.PostLogoutRedirectUris) descriptor.PostLogoutRedirectUris.Add(new Uri(uri));
-                if (!string.IsNullOrEmpty(clientReq.FrontChannelLogoutUri))
-                {
-                    descriptor.FrontChannelLogoutUri = new Uri(clientReq.FrontChannelLogoutUri);
-                }
 
                 await _applicationManager.CreateAsync(descriptor);
             }

@@ -56,7 +56,6 @@ public class ServiceRegistrationWorker : BackgroundService
                 DisplayName = _configuration["ServiceName"] ?? "Main UI Service",
                 RedirectUris = { $"{baseUrl}/signin-oidc" },
                 PostLogoutRedirectUris = { $"{baseUrl}/signout-callback-oidc" },
-                FrontChannelLogoutUri = $"{baseUrl}/signout-oidc",
                 HealthCheckUrl = $"{baseUrl}/health"
             }
         };
