@@ -2,12 +2,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using MassTransit;
 using IdentitySolution.ServiceDiscovery;
-using IdentityService.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddInfrastructure(builder.Configuration);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -26,7 +22,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
 {
-    options.Authority = builder.Configuration["IdentityService:Authority"] ?? "https://localhost:7200";
+    options.Authority = builder.Configuration["IdentityService:Authority"] ?? "https://localhost:7242";
     options.ClientId = "ui-client";
     options.ClientSecret = "ui-secret";
     options.ResponseType = "code";

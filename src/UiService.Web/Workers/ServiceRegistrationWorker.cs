@@ -7,14 +7,14 @@ namespace UiService.Web.Workers;
 
 public class ServiceRegistrationWorker : BackgroundService
 {
-    private readonly IModuleRegistrationService _registrationService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ServiceRegistrationWorker> _logger;
 
     public ServiceRegistrationWorker(
-        IModuleRegistrationService registrationService,
+        IServiceScopeFactory scopeFactory,
         ILogger<ServiceRegistrationWorker> logger)
     {
-        _registrationService = registrationService;
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
@@ -44,7 +44,12 @@ public class ServiceRegistrationWorker : BackgroundService
         {
             try
             {
-                await _registrationService.RegisterAsync(roles, permissions, users);
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var registrationService = scope.ServiceProvider.GetRequiredService<IModuleRegistrationService>();
+                    await registrationService.RegisterAsync(roles, permissions, users);
+                }
+                
                 _logger.LogInformation("Module registration data sent successfully.");
                 break;
             }

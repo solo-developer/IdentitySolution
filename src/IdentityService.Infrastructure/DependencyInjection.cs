@@ -61,6 +61,10 @@ public static class DependencyInjection
                 options.UseAspNetCore()
                        .EnableAuthorizationEndpointPassthrough()
                        .EnableTokenEndpointPassthrough();
+
+                // Custom claim mapping to ensure the 'sub' claim is correctly handled
+                // options.AddClaims is not available in this version or takes different arguments. 
+                // We are already adding the subject claim manually in the AuthorizationController and ClaimsFactory.
             })
             .AddValidation(options =>
             {

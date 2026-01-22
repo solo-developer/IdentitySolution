@@ -120,27 +120,46 @@ public class DatabaseInitializer
 
     private async Task SeedOidcScopesAsync()
     {
-        if (await _scopeManager.FindByNameAsync("api") == null)
+        await EnsureScopeAsync("api", "API access", new[] { "identity-server" });
+        await EnsureScopeAsync("openid", "OpenID Connect", null);
+        await EnsureScopeAsync("profile", "User profile", null);
+        await EnsureScopeAsync("email", "User email", null);
+        await EnsureScopeAsync("roles", "User roles", null);
+    }
+
+    private async Task EnsureScopeAsync(string name, string displayName, string[]? resources = null)
+    {
+        if (await _scopeManager.FindByNameAsync(name) == null)
         {
-            await _scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+            var descriptor = new OpenIddictScopeDescriptor
             {
-                Name = "api",
-                DisplayName = "API access",
-                Resources = { "identity-server" }
-            });
+                Name = name,
+                DisplayName = displayName
+            };
+
+            if (resources != null)
+            {
+                foreach (var resource in resources)
+                {
+                    descriptor.Resources.Add(resource);
+                }
+            }
+
+            await _scopeManager.CreateAsync(descriptor);
         }
     }
 
     private async Task SeedOidcClientsAsync()
     {
-        // Hospital System Client
-        if (await _applicationManager.FindByClientIdAsync("hospital-app") == null)
+        // Define Clients
+        var clients = new List<OpenIddictApplicationDescriptor>
         {
-            await _applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
+            new OpenIddictApplicationDescriptor
             {
                 ClientId = "hospital-app",
                 ClientSecret = "hospital-secret",
                 DisplayName = "Hospital System",
+                ClientType = OpenIddictConstants.ClientTypes.Confidential,
                 PostLogoutRedirectUris = { new Uri("https://localhost:5001/signout-callback-oidc") },
                 RedirectUris = { new Uri("https://localhost:5001/signin-oidc") },
                 Permissions =
@@ -152,21 +171,18 @@ public class DatabaseInitializer
                     OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
                     OpenIddictConstants.Permissions.ResponseTypes.Code,
                     OpenIddictConstants.Permissions.Scopes.Email,
+                    OpenIddictConstants.Permissions.Prefixes.Scope + "openid",
                     OpenIddictConstants.Permissions.Scopes.Profile,
                     OpenIddictConstants.Permissions.Scopes.Roles,
                     OpenIddictConstants.Permissions.Prefixes.Scope + "api"
                 }
-            });
-        }
-
-        // Financial System Client
-        if (await _applicationManager.FindByClientIdAsync("financial-app") == null)
-        {
-            await _applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
+            },
+            new OpenIddictApplicationDescriptor
             {
                 ClientId = "financial-app",
                 ClientSecret = "financial-secret",
                 DisplayName = "Financial Analysis System",
+                ClientType = OpenIddictConstants.ClientTypes.Confidential,
                 PostLogoutRedirectUris = { new Uri("https://localhost:5002/signout-callback-oidc") },
                 RedirectUris = { new Uri("https://localhost:5002/signin-oidc") },
                 Permissions =
@@ -178,23 +194,20 @@ public class DatabaseInitializer
                     OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
                     OpenIddictConstants.Permissions.ResponseTypes.Code,
                     OpenIddictConstants.Permissions.Scopes.Email,
+                    OpenIddictConstants.Permissions.Prefixes.Scope + "openid",
                     OpenIddictConstants.Permissions.Scopes.Profile,
                     OpenIddictConstants.Permissions.Scopes.Roles,
                     OpenIddictConstants.Permissions.Prefixes.Scope + "api"
                 }
-            });
-        }
-
-        // UI Service Client (SSO with Cookies)
-        if (await _applicationManager.FindByClientIdAsync("ui-client") == null)
-        {
-            await _applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
+            },
+            new OpenIddictApplicationDescriptor
             {
                 ClientId = "ui-client",
                 ClientSecret = "ui-secret",
                 DisplayName = "Main UI Service",
-                PostLogoutRedirectUris = { new Uri("https://localhost:7100/signout-callback-oidc") },
-                RedirectUris = { new Uri("https://localhost:7100/signin-oidc") },
+                ClientType = OpenIddictConstants.ClientTypes.Confidential,
+                PostLogoutRedirectUris = { new Uri("https://localhost:7150/signout-callback-oidc") },
+                RedirectUris = { new Uri("https://localhost:7150/signin-oidc") },
                 Permissions =
                 {
                     OpenIddictConstants.Permissions.Endpoints.Authorization,
@@ -204,21 +217,18 @@ public class DatabaseInitializer
                     OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
                     OpenIddictConstants.Permissions.ResponseTypes.Code,
                     OpenIddictConstants.Permissions.Scopes.Email,
+                    OpenIddictConstants.Permissions.Prefixes.Scope + "openid",
                     OpenIddictConstants.Permissions.Scopes.Profile,
                     OpenIddictConstants.Permissions.Scopes.Roles,
                     OpenIddictConstants.Permissions.Prefixes.Scope + "api"
                 }
-            });
-        }
-
-        // Recovery Project Client (Machine-to-Machine)
-        if (await _applicationManager.FindByClientIdAsync("recovery-project") == null)
-        {
-            await _applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
+            },
+            new OpenIddictApplicationDescriptor
             {
                 ClientId = "recovery-project",
                 ClientSecret = "recovery-secret",
                 DisplayName = "Recovery Project Service",
+                ClientType = OpenIddictConstants.ClientTypes.Confidential,
                 Permissions =
                 {
                     OpenIddictConstants.Permissions.Endpoints.Token,
@@ -226,7 +236,20 @@ public class DatabaseInitializer
                     OpenIddictConstants.Permissions.Scopes.Roles,
                     OpenIddictConstants.Permissions.Prefixes.Scope + "api"
                 }
-            });
+            }
+        };
+
+        foreach (var descriptor in clients)
+        {
+            var application = await _applicationManager.FindByClientIdAsync(descriptor.ClientId!);
+            if (application == null)
+            {
+                await _applicationManager.CreateAsync(descriptor);
+            }
+            else
+            {
+                await _applicationManager.UpdateAsync(application, descriptor);
+            }
         }
     }
 }

@@ -18,7 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\IdentitySolution.Shared\IdentitySolution.Shared.csproj" />
     <ProjectReference Include="..\IdentitySolution.ServiceDiscovery\IdentitySolution.ServiceDiscovery.csproj" />
-    <ProjectReference Include="..\IdentityService.Infrastructure\IdentityService.Infrastructure.csproj" />
+
   </ItemGroup>
 
 </Project>

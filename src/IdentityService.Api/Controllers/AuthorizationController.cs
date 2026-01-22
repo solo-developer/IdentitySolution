@@ -67,6 +67,13 @@ public class AuthorizationController : Controller
         // Create a new ClaimsPrincipal containing the claims that will be used to create an id_token, a token or a code.
         var principal = await _signInManager.CreateUserPrincipalAsync(user);
 
+        // Ensure the subject claim is present, as it is mandatory for OpenIddict.
+        var identity = (ClaimsIdentity)principal.Identity!;
+        if (!principal.HasClaim(c => c.Type == OpenIddictConstants.Claims.Subject))
+        {
+            identity.AddClaim(new Claim(OpenIddictConstants.Claims.Subject, await _userManager.GetUserIdAsync(user)));
+        }
+
         // Set the list of scopes granted to the client application.
         principal.SetScopes(request.GetScopes());
         principal.SetResources("identity-server");

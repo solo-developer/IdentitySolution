@@ -43,6 +43,7 @@ public class ApplicationClaimsPrincipalFactory : UserClaimsPrincipalFactory<Appl
         }
 
         identity.AddClaim(new Claim("full_name", user.FullName));
+        identity.AddClaim(new Claim(OpenIddict.Abstractions.OpenIddictConstants.Claims.Subject, user.Id));
 
         return principal;
     }
