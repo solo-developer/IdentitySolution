@@ -66,10 +66,16 @@ builder.Services.AddConsulConfig(builder.Configuration);
 builder.Services.AddScoped<IdentitySolution.ServiceDiscovery.IModuleRegistrationService, IdentitySolution.ServiceDiscovery.ModuleRegistrationService>();
 builder.Services.AddHostedService<UiService.Web.Workers.ServiceRegistrationWorker>();
 
+// Custom Session Management
+builder.Services.AddSingleton<UiService.Web.Services.IGlobalSessionStore, UiService.Web.Services.GlobalSessionStore>();
+
 var app = builder.Build();
 
 // Use Service Discovery
 app.UseConsul();
+
+// Custom Global Logout Check
+app.UseMiddleware<UiService.Web.Middleware.GlobalLogoutMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

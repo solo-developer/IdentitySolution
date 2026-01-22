@@ -68,7 +68,8 @@ public static class DependencyInjection
                 // Enable endpoints
                 options.SetAuthorizationEndpointUris("/connect/authorize")
                        .SetTokenEndpointUris("/connect/token")
-                       .SetUserinfoEndpointUris("/connect/userinfo");
+                       .SetUserinfoEndpointUris("/connect/userinfo")
+                       .SetLogoutEndpointUris("/connect/logout");
 
                 // Enable flows
                 options.AllowAuthorizationCodeFlow()
@@ -83,7 +84,8 @@ public static class DependencyInjection
                 // Register ASP.NET Core host
                 options.UseAspNetCore()
                        .EnableAuthorizationEndpointPassthrough()
-                       .EnableTokenEndpointPassthrough();
+                       .EnableTokenEndpointPassthrough()
+                       .EnableLogoutEndpointPassthrough();
 
                 // Custom claim mapping to ensure the 'sub' claim is correctly handled
                 // options.AddClaims is not available in this version or takes different arguments. 

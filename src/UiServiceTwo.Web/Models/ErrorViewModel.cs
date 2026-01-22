@@ -1,4 +1,4 @@
-namespace UiService.Web.Models;
+namespace UiServiceTwo.Web.Models;
 
 public class ErrorViewModel
 {

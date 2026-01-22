@@ -2,7 +2,7 @@ using IdentitySolution.Shared.Events;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace UiService.Web.Consumers;
+namespace UiServiceTwo.Web.Consumers;
 
 public class UserLoggedOutConsumer : IConsumer<IUserLoggedOut>
 {
@@ -17,7 +17,7 @@ public class UserLoggedOutConsumer : IConsumer<IUserLoggedOut>
 
     public Task Consume(ConsumeContext<IUserLoggedOut> context)
     {
-        _logger.LogInformation("User {UserName} (ID: {UserId}) logged out globally. Invalidating local sessions.", 
+        _logger.LogInformation("User {UserName} (ID: {UserId}) logged out globally. Invalidating local sessions in UI Two.", 
             context.Message.UserName, context.Message.UserId);
         
         _sessionStore.InvalidateUser(context.Message.UserId);

@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using UiService.Web.Models;
+using UiServiceTwo.Web.Models;
 
-namespace UiService.Web.Controllers;
+namespace UiServiceTwo.Web.Controllers;
 
 [Authorize]
 public class HomeController : Controller

@@ -50,6 +50,8 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddMassTransit(x =>
 {
     x.SetKebabCaseEndpointNameFormatter();
+    x.AddConsumer<UiServiceTwo.Web.Consumers.UserLoggedOutConsumer>();
+
     x.UsingRabbitMq((context, cfg) =>
     {
         var rabbitMqHost = builder.Configuration["RabbitMq:Host"] ?? "localhost";
@@ -61,9 +63,15 @@ builder.Services.AddMassTransit(x =>
 // Configure Service Discovery
 builder.Services.AddConsulConfig(builder.Configuration);
 
+// Custom Session Management
+builder.Services.AddSingleton<UiServiceTwo.Web.Services.IGlobalSessionStore, UiServiceTwo.Web.Services.GlobalSessionStore>();
+
 var app = builder.Build();
 
 app.UseConsul();
+
+// Custom Global Logout Check
+app.UseMiddleware<UiServiceTwo.Web.Middleware.GlobalLogoutMiddleware>();
 
 if (!app.Environment.IsDevelopment())
 {
