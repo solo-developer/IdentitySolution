@@ -24,17 +24,20 @@ public class AuthorizationController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IOpenIddictApplicationManager _applicationManager;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ILogger<AuthorizationController> _logger;
 
     public AuthorizationController(
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
         IOpenIddictApplicationManager applicationManager,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        ILogger<AuthorizationController> logger)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _applicationManager = applicationManager;
         _publishEndpoint = publishEndpoint;
+        _logger = logger;
     }
 
     [HttpGet("~/connect/authorize")]
@@ -45,8 +48,29 @@ public class AuthorizationController : Controller
         var request = HttpContext.GetOpenIddictServerRequest() ??
             throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-        // Retrieve the user principal stored in the authentication cookie.
-        var result = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+        // Try to retrieve the user principal from the middleware first, then fall back to manual authentication.
+        // This is more reliable for SSO.
+        AuthenticateResult result;
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            result = AuthenticateResult.Success(new AuthenticationTicket(User, IdentityConstants.ApplicationScheme));
+            _logger.LogInformation("SSO Session detected via User.Identity for user: {User}", User.Identity.Name);
+        }
+        else
+        {
+            var cookieList = string.Join("; ", Request.Cookies.Select(c => $"{c.Key}"));
+            _logger.LogDebug("[DEBUG] Browser sent these cookies: {Cookies}", string.IsNullOrEmpty(cookieList) ? "NONE" : cookieList);
+
+            result = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("SSO Session detected via AuthenticateAsync for user: {User}", result.Principal.Identity?.Name);
+            }
+            else
+            {
+                _logger.LogWarning("No SSO Session detected. Reason: {Failure}", result.Failure?.Message ?? "Identity.Global.Session cookie missing or corrupted");
+            }
+        }
 
         // If the user principal is not available, redirect the user to the login page.
         if (!result.Succeeded)

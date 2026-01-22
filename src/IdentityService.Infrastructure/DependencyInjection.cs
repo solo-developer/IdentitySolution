@@ -1,3 +1,5 @@
+using System.IO;
+using Microsoft.AspNetCore.DataProtection;
 using IdentityService.Application.Interfaces;
 using IdentityService.Domain.Entities;
 using IdentityService.Infrastructure.Persistence;
@@ -9,6 +11,7 @@ using IdentitySolution.Shared.Events;
 using IdentitySolution.ServiceDiscovery;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Http;
 
 namespace IdentityService.Infrastructure;
 
@@ -17,6 +20,14 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        // Use an absolute, solution-independent path for keys to ensure encryption stability on Windows
+        var keysPath = @"C:\temp\IdentitySolution_Keys";
+        if (!Directory.Exists(keysPath)) Directory.CreateDirectory(keysPath);
+
+        services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+            .SetApplicationName("IdentitySolution");
 
         services.AddDbContext<ApplicationDbContext>(options =>
         {
@@ -32,6 +43,18 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders()
             .AddClaimsPrincipalFactory<ApplicationClaimsPrincipalFactory>();
+
+        services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.Name = "Identity.Global.Session";
+            options.Cookie.Path = "/";
+            options.Cookie.SameSite = SameSiteMode.Unspecified; // Some browsers prefer this for cross-port localhost sharing
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
+            options.Cookie.IsEssential = true;
+            options.Cookie.HttpOnly = true;
+            options.LoginPath = "/Account/Login";
+            options.ExpireTimeSpan = TimeSpan.FromDays(30);
+        });
 
         // Configure OpenIddict
         services.AddOpenIddict()
