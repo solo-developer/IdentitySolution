@@ -15,24 +15,44 @@ This repository provides a centralized **Identity and Access Management (IAM)** 
 
 ## 🚀 Connecting a New Service (Zero-Touch Integration)
 
-Starting with the latest update, you no longer need to modify the **Identity Service (Core)** or **Infrastructure** code to add a new service. New services can now self-register their OIDC clients, roles, and permissions dynamically.
+Starting with the latest update, you no longer need to modify the **Identity Service (Core)** or **Infrastructure** code to add a new service. New services can now self-register their OIDC clients, roles, and permissions dynamically using settings from their `appsettings.json`.
 
-### 1. Implement the ServiceRegistrationWorker
-In your new service, create a background worker that uses the `IModuleRegistrationService`. This worker will run on startup and send the registration data to the Identity Service.
+### 1. Configure your `appsettings.json`
+Add the following sections to your client service to define its identity and discovery parameters:
+
+```json
+"IdentityClient": {
+  "ClientId": "your-app-id",
+  "ClientSecret": "your-app-secret",
+  "BaseUrl": "https://localhost:PORT"
+},
+"Consul": {
+  "Address": "http://localhost:8500",
+  "ServicePort": PORT,
+  "ServiceName": "Your.Service.Name"
+}
+```
+
+### 2. Implement the ServiceRegistrationWorker
+The worker now automatically builds OIDC URLs and health check endpoints using the configuration provided above.
 
 ```csharp
 protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 {
+    var configSection = _configuration.GetSection("IdentityClient");
+    var baseUrl = configSection["BaseUrl"];
+
     var oidcClients = new List<OidcClientDto>
     {
         new OidcClientDto
         {
-            ClientId = "your-app-id",
-            ClientSecret = "your-app-secret",
-            DisplayName = "Your Application Name",
-            RedirectUris = { "https://localhost:PORT/signin-oidc" },
-            PostLogoutRedirectUris = { "https://localhost:PORT/signout-callback-oidc" },
-            FrontChannelLogoutUri = "https://localhost:PORT/signout-oidc"
+            ClientId = configSection["ClientId"],
+            ClientSecret = configSection["ClientSecret"],
+            DisplayName = _configuration["ServiceName"],
+            RedirectUris = { $"{baseUrl}/signin-oidc" },
+            PostLogoutRedirectUris = { $"{baseUrl}/signout-callback-oidc" },
+            FrontChannelLogoutUri = $"{baseUrl}/signout-oidc",
+            HealthCheckUrl = $"{baseUrl}/health"
         }
     };
 
@@ -44,26 +64,13 @@ protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 }
 ```
 
-### 2. Configure OIDC Authentication
-In your client's `Program.cs`, add the standard OIDC configuration. The Identity Service will automatically recognize the `ClientId` you registered in step 1.
-
+### 3. Enable Health Checks
+All services should expose a health endpoint to allow Consul to monitor their status.
+In `Program.cs`:
 ```csharp
-builder.Services.AddAuthentication(options => {
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-})
-.AddCookie(options => {
-    options.Cookie.Name = "YourApp.Cookie";
-})
-.AddOpenIdConnect(options => {
-    options.Authority = "https://localhost:7242"; // Identity Service URL
-    options.ClientId = "your-app-id";
-    options.ClientSecret = "your-app-secret";
-    options.ResponseType = "code";
-    options.SaveTokens = true;
-    options.GetClaimsFromUserInfoEndpoint = true;
-    options.Scope.Add("roles");
-});
+builder.Services.AddHealthChecks();
+// ...
+app.MapHealthChecks("/health");
 ```
 
 ---
@@ -96,20 +103,21 @@ app.UseAuthentication();
 
 ---
 
-## 🖥️ Service Discovery & Workers
+## 🏥 Health Checks & Monitoring
 
-The solution uses a worker to automatically register itself as a "Module" in the management system upon startup.
+The system uses standard ASP.NET Core Health Checks integrated with Consul:
+- **Identity Service**: Monitors database connectivity (`/health`).
+- **UI Services**: Monitor basic availability and self-register their health status.
+- **Consul**: Automatically pings each service's health endpoint. Check the status at `http://localhost:8500`.
 
-### 1. Register the Service Discovery Module
-In `Program.cs`:
-```csharp
-builder.Services.AddConsulConfig(builder.Configuration);
-builder.Services.AddScoped<IModuleRegistrationService, ModuleRegistrationService>();
-builder.Services.AddHostedService<ServiceRegistrationWorker>();
-```
+---
 
-### 2. The ServiceRegistrationWorker
-This worker runs on startup, gathers information about the current service (Port, IP, Name), and sends a registration event to the Identity Service via RabbitMQ.
+## 🖥️ Service Discovery
+
+Services automatically register with Consul on startup. The registration includes:
+- **Service Name** and **Port** (from `appsettings.json`).
+- **Health Check URI**: Standardized as `/health`.
+- **Automatic Deregistration**: Services are removed from Consul 1 minute after failing health checks.
 
 ---
 
@@ -118,7 +126,7 @@ This worker runs on startup, gathers information about the current service (Port
 | Event Name | Source | Purpose |
 | :--- | :--- | :--- |
 | `IUserLoggedOut` | Identity Service | Broadcasts when a user logs out globally. |
-| `IRegisterModule` | Client Services | Sent on startup to register the service in the central registry. |
+| `IRegisterModule` | Client Services | Sent on startup to register the service and its OIDC client. |
 | `IUserCreated` | Identity Service | Broadcasts when a new user is registered. |
 
 ---
@@ -129,15 +137,14 @@ This worker runs on startup, gathers information about the current service (Port
 For SSO to work on `localhost`, all services must share a stable encryption context. In development, the Identity Service saves keys to `C:\temp\IdentitySolution_Keys`. Ensure this directory exists and is writable.
 
 ### Common Issues
-1. **Invalid Scope Error**: Ensure the `roles` and `api` scopes are created in the database. The `DatabaseInitializer` handles this automatically on startup.
+1. **Consul Connection**: Ensure the Consul agent is running (default `http://localhost:8500`).
 2. **SSO Not Working**: 
-   - Ensure both apps are using the same OIDC `Authority`.
-   - Check that browser cookies for `localhost` are not being blocked.
+   - Check if the `BaseUrl` in `appsettings.json` matches your actual running URL exactly (including `https`).
    - Use the same browser profile for both apps.
 
 ---
 
-## 📖 Recommended File Structure
-- `src/IdentityService.Api`: Central Identity Provider.
-- `src/IdentitySolution.Shared`: Common models and event interfaces.
-- `src/IdentitySolution.ServiceDiscovery`: Consul integration logic.
+## 📖 Project Structure
+- `src/IdentityService.Api`: Central Identity Provider + Health Checks.
+- `src/IdentitySolution.Shared`: DTOs and Event Interfaces.
+- `src/IdentitySolution.ServiceDiscovery`: Consul extensions and registration logic.
