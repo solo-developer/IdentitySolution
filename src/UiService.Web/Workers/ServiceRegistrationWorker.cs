@@ -8,13 +8,16 @@ namespace UiService.Web.Workers;
 public class ServiceRegistrationWorker : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<ServiceRegistrationWorker> _logger;
 
     public ServiceRegistrationWorker(
         IServiceScopeFactory scopeFactory,
+        IConfiguration configuration,
         ILogger<ServiceRegistrationWorker> logger)
     {
         _scopeFactory = scopeFactory;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -39,16 +42,22 @@ public class ServiceRegistrationWorker : BackgroundService
             new UserDto { UserName = "uisupervisor", Email = "supervisor@ui.com", FullName = "UI Supervisor" }
         };
 
+        var configSection = _configuration.GetSection("IdentityClient");
+        var clientId = configSection["ClientId"] ?? "ui-client";
+        var clientSecret = configSection["ClientSecret"] ?? "ui-secret";
+        var baseUrl = configSection["BaseUrl"] ?? "https://localhost:7150";
+
         var oidcClients = new List<OidcClientDto>
         {
             new OidcClientDto
             {
-                ClientId = "ui-client",
-                ClientSecret = "ui-secret",
-                DisplayName = "Main UI Service",
-                RedirectUris = { "https://localhost:7150/signin-oidc" },
-                PostLogoutRedirectUris = { "https://localhost:7150/signout-callback-oidc" },
-                FrontChannelLogoutUri = "https://localhost:7150/signout-oidc"
+                ClientId = clientId,
+                ClientSecret = clientSecret,
+                DisplayName = _configuration["ServiceName"] ?? "Main UI Service",
+                RedirectUris = { $"{baseUrl}/signin-oidc" },
+                PostLogoutRedirectUris = { $"{baseUrl}/signout-callback-oidc" },
+                FrontChannelLogoutUri = $"{baseUrl}/signout-oidc",
+                HealthCheckUrl = $"{baseUrl}/health"
             }
         };
 

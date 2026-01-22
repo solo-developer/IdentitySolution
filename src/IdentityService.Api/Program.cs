@@ -12,6 +12,8 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -43,5 +45,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapRazorPages();
+app.MapHealthChecks("/health");
 
 app.Run();

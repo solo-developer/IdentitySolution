@@ -8,13 +8,16 @@ namespace UiServiceTwo.Web.Workers;
 public class ServiceRegistrationWorker : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<ServiceRegistrationWorker> _logger;
 
     public ServiceRegistrationWorker(
         IServiceScopeFactory scopeFactory,
+        IConfiguration configuration,
         ILogger<ServiceRegistrationWorker> logger)
     {
         _scopeFactory = scopeFactory;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -38,16 +41,22 @@ public class ServiceRegistrationWorker : BackgroundService
             new UserDto { UserName = "ui2supervisor", Email = "supervisor@ui2.com", FullName = "UI Two Supervisor" }
         };
 
+        var configSection = _configuration.GetSection("IdentityClient");
+        var clientId = configSection["ClientId"] ?? "ui-client-2";
+        var clientSecret = configSection["ClientSecret"] ?? "ui-secret-2";
+        var baseUrl = configSection["BaseUrl"] ?? "https://localhost:7160";
+
         var oidcClients = new List<OidcClientDto>
         {
             new OidcClientDto
             {
-                ClientId = "ui-client-2",
-                ClientSecret = "ui-secret-2",
-                DisplayName = "Second UI Service",
-                RedirectUris = { "https://localhost:7160/signin-oidc" },
-                PostLogoutRedirectUris = { "https://localhost:7160/signout-callback-oidc" },
-                FrontChannelLogoutUri = "https://localhost:7160/signout-oidc"
+                ClientId = clientId,
+                ClientSecret = clientSecret,
+                DisplayName = _configuration["ServiceName"] ?? "Second UI Service",
+                RedirectUris = { $"{baseUrl}/signin-oidc" },
+                PostLogoutRedirectUris = { $"{baseUrl}/signout-callback-oidc" },
+                FrontChannelLogoutUri = $"{baseUrl}/signout-oidc",
+                HealthCheckUrl = $"{baseUrl}/health"
             }
         };
 

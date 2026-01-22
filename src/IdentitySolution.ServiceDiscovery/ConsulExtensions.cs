@@ -26,18 +26,30 @@ public static class ConsulExtensions
         var logger = app.ApplicationServices.GetRequiredService<ILoggerFactory>().CreateLogger("ConsulRegistration");
         var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
 
+        var config = app.ApplicationServices.GetRequiredService<IConfiguration>();
+        var serviceName = config["Consul:ServiceName"] ?? "UnknownService";
+        var servicePort = config.GetValue<int>("Consul:ServicePort", 7200);
+        var baseUrl = config["IdentityClient:BaseUrl"] ?? $"https://localhost:{servicePort}";
+
         var registration = new AgentServiceRegistration()
         {
             ID = Guid.NewGuid().ToString(),
-            Name = app.ApplicationServices.GetRequiredService<IConfiguration>()["Consul:ServiceName"] ?? "UnknownService",
-            Address = "localhost", // Should be dynamic in production
-            Port = 7200, // Should be dynamic
+            Name = serviceName,
+            Address = "localhost",
+            Port = servicePort,
+            Check = new AgentServiceCheck()
+            {
+                HTTP = $"{baseUrl}/health",
+                Interval = TimeSpan.FromSeconds(10),
+                Timeout = TimeSpan.FromSeconds(5),
+                DeregisterCriticalServiceAfter = TimeSpan.FromMinutes(1),
+                TLSSkipVerify = true // Since we are using localhost self-signed certs
+            }
         };
 
         try
         {
-            logger.LogInformation("Registering with Consul");
-            // consulClient.Agent.ServiceDeregister(registration.ID).Wait(); // No need to deregister a random new GUID
+            logger.LogInformation("Registering {ServiceName} on port {ServicePort} with Consul", serviceName, servicePort);
             consulClient.Agent.ServiceRegister(registration).Wait();
 
             lifetime.ApplicationStopping.Register(() =>

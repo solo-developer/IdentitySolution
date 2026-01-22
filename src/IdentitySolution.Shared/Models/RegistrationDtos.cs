@@ -28,4 +28,5 @@ public class OidcClientDto
     public List<string> RedirectUris { get; set; } = new();
     public List<string> PostLogoutRedirectUris { get; set; } = new();
     public string? FrontChannelLogoutUri { get; set; }
+    public string? HealthCheckUrl { get; set; }
 }
