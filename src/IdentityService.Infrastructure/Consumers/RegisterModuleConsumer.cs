@@ -14,17 +14,20 @@ public class RegisterModuleConsumer : IConsumer<IRegisterModule>
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly IApplicationDbContext _context;
+    private readonly IOpenIddictApplicationManager _applicationManager;
     private readonly ILogger<RegisterModuleConsumer> _logger;
 
     public RegisterModuleConsumer(
         UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager,
         IApplicationDbContext context,
+        IOpenIddictApplicationManager applicationManager,
         ILogger<RegisterModuleConsumer> logger)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _context = context;
+        _applicationManager = applicationManager;
         _logger = logger;
     }
 
@@ -83,9 +86,45 @@ public class RegisterModuleConsumer : IConsumer<IRegisterModule>
                     _logger.LogError("Failed to create user {UserName}: {Errors}", uReq.UserName, string.Join(", ", result.Errors.Select(e => e.Description)));
                 }
             }
-            else
+        }
+
+        // 4. Process OIDC Clients
+        foreach (var clientReq in message.OidcClients)
+        {
+            if (await _applicationManager.FindByClientIdAsync(clientReq.ClientId) == null)
             {
-                _logger.LogInformation("User {UserName} already exists. Skipping insertion.", uReq.UserName);
+                _logger.LogInformation("Registering new OIDC client: {ClientId} for module {ModuleName}", clientReq.ClientId, message.ModuleName);
+                
+                var descriptor = new OpenIddict.Abstractions.OpenIddictApplicationDescriptor
+                {
+                    ClientId = clientReq.ClientId,
+                    ClientSecret = clientReq.ClientSecret,
+                    DisplayName = clientReq.DisplayName,
+                    ClientType = OpenIddict.Abstractions.OpenIddictConstants.ClientTypes.Confidential,
+                    Permissions =
+                    {
+                        OpenIddict.Abstractions.OpenIddictConstants.Permissions.Endpoints.Authorization,
+                        OpenIddict.Abstractions.OpenIddictConstants.Permissions.Endpoints.Logout,
+                        OpenIddict.Abstractions.OpenIddictConstants.Permissions.Endpoints.Token,
+                        OpenIddict.Abstractions.OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
+                        OpenIddict.Abstractions.OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+                        OpenIddict.Abstractions.OpenIddictConstants.Permissions.ResponseTypes.Code,
+                        OpenIddict.Abstractions.OpenIddictConstants.Permissions.Scopes.Email,
+                        OpenIddict.Abstractions.OpenIddictConstants.Permissions.Scopes.Profile,
+                        OpenIddict.Abstractions.OpenIddictConstants.Permissions.Scopes.Roles,
+                        OpenIddict.Abstractions.OpenIddictConstants.Permissions.Prefixes.Scope + "openid",
+                        OpenIddict.Abstractions.OpenIddictConstants.Permissions.Prefixes.Scope + "api"
+                    }
+                };
+
+                foreach (var uri in clientReq.RedirectUris) descriptor.RedirectUris.Add(new Uri(uri));
+                foreach (var uri in clientReq.PostLogoutRedirectUris) descriptor.PostLogoutRedirectUris.Add(new Uri(uri));
+                if (!string.IsNullOrEmpty(clientReq.FrontChannelLogoutUri))
+                {
+                    descriptor.FrontChannelLogoutUri = new Uri(clientReq.FrontChannelLogoutUri);
+                }
+
+                await _applicationManager.CreateAsync(descriptor);
             }
         }
     }

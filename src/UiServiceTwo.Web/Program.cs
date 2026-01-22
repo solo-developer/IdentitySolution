@@ -62,6 +62,7 @@ builder.Services.AddMassTransit(x =>
 
 // Configure Service Discovery
 builder.Services.AddConsulConfig(builder.Configuration);
+builder.Services.AddHostedService<UiServiceTwo.Web.Workers.ServiceRegistrationWorker>();
 
 // Custom Session Management
 builder.Services.AddSingleton<UiServiceTwo.Web.Services.IGlobalSessionStore, UiServiceTwo.Web.Services.GlobalSessionStore>();

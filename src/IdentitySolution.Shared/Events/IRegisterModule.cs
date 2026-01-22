@@ -8,4 +8,5 @@ public interface IRegisterModule
     List<RoleDto> Roles { get; }
     List<PermissionDto> Permissions { get; }
     List<UserDto> Users { get; }
+    List<OidcClientDto> OidcClients { get; }
 }

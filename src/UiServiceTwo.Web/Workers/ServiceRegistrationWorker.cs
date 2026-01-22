@@ -3,7 +3,7 @@ using IdentitySolution.Shared.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace UiService.Web.Workers;
+namespace UiServiceTwo.Web.Workers;
 
 public class ServiceRegistrationWorker : BackgroundService
 {
@@ -25,30 +25,29 @@ public class ServiceRegistrationWorker : BackgroundService
         // Define module-specific data to be seeded in IdentityService
         var roles = new List<RoleDto>
         {
-            new RoleDto { Name = "UiManager", Description = "Manager for UI Service" }
+            new RoleDto { Name = "UiManagerTwo", Description = "Manager for UI Service Two" }
         };
 
         var permissions = new List<PermissionDto>
         {
-            new PermissionDto { Name = "ui.view.dashboard", Module = "UI", Description = "View UI Dashboard" },
-            new PermissionDto { Name = "ui.manage.settings", Module = "UI", Description = "Manage UI Settings" }
+            new PermissionDto { Name = "ui2.view.dashboard", Module = "UI2", Description = "View UI Two Dashboard" }
         };
 
         var users = new List<UserDto>
         {
-            new UserDto { UserName = "uisupervisor", Email = "supervisor@ui.com", FullName = "UI Supervisor" }
+            new UserDto { UserName = "ui2supervisor", Email = "supervisor@ui2.com", FullName = "UI Two Supervisor" }
         };
 
         var oidcClients = new List<OidcClientDto>
         {
             new OidcClientDto
             {
-                ClientId = "ui-client",
-                ClientSecret = "ui-secret",
-                DisplayName = "Main UI Service",
-                RedirectUris = { "https://localhost:7150/signin-oidc" },
-                PostLogoutRedirectUris = { "https://localhost:7150/signout-callback-oidc" },
-                FrontChannelLogoutUri = "https://localhost:7150/signout-oidc"
+                ClientId = "ui-client-2",
+                ClientSecret = "ui-secret-2",
+                DisplayName = "Second UI Service",
+                RedirectUris = { "https://localhost:7160/signin-oidc" },
+                PostLogoutRedirectUris = { "https://localhost:7160/signout-callback-oidc" },
+                FrontChannelLogoutUri = "https://localhost:7160/signout-oidc"
             }
         };
 

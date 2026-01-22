@@ -8,7 +8,7 @@ namespace IdentitySolution.ServiceDiscovery;
 
 public interface IModuleRegistrationService
 {
-    Task RegisterAsync(List<RoleDto> roles, List<PermissionDto> permissions, List<UserDto> users);
+    Task RegisterAsync(List<RoleDto> roles, List<PermissionDto> permissions, List<UserDto> users, List<OidcClientDto> oidcClients);
 }
 
 public class ModuleRegistrationService : IModuleRegistrationService
@@ -27,7 +27,7 @@ public class ModuleRegistrationService : IModuleRegistrationService
         _logger = logger;
     }
 
-    public async Task RegisterAsync(List<RoleDto> roles, List<PermissionDto> permissions, List<UserDto> users)
+    public async Task RegisterAsync(List<RoleDto> roles, List<PermissionDto> permissions, List<UserDto> users, List<OidcClientDto> oidcClients)
     {
         var moduleName = _configuration["ServiceName"] ?? "UnknownModule";
         _logger.LogInformation("Sending registration data for module: {ModuleName}", moduleName);
@@ -37,7 +37,8 @@ public class ModuleRegistrationService : IModuleRegistrationService
             ModuleName = moduleName,
             Roles = roles,
             Permissions = permissions,
-            Users = users
+            Users = users,
+            OidcClients = oidcClients
         });
     }
 }

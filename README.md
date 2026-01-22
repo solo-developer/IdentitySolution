@@ -13,41 +13,39 @@ This repository provides a centralized **Identity and Access Management (IAM)** 
 
 ---
 
-## 🚀 Connecting a New Service
+## 🚀 Connecting a New Service (Zero-Touch Integration)
 
-To integrate a new service with the Identity Solution, follow these steps:
+Starting with the latest update, you no longer need to modify the **Identity Service (Core)** or **Infrastructure** code to add a new service. New services can now self-register their OIDC clients, roles, and permissions dynamically.
 
-### 1. Register the Client in Identity Service
-Open `src/IdentityService.Infrastructure/Persistence/DatabaseInitializer.cs` and add a new `OpenIddictApplicationDescriptor`:
+### 1. Implement the ServiceRegistrationWorker
+In your new service, create a background worker that uses the `IModuleRegistrationService`. This worker will run on startup and send the registration data to the Identity Service.
 
 ```csharp
-new OpenIddictApplicationDescriptor
+protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 {
-    ClientId = "your-app-id",
-    ClientSecret = "your-app-secret",
-    DisplayName = "Your Application Name",
-    ClientType = OpenIddictConstants.ClientTypes.Confidential,
-    RedirectUris = { new Uri("https://localhost:PORT/signin-oidc") },
-    PostLogoutRedirectUris = { new Uri("https://localhost:PORT/signout-callback-oidc") },
-    FrontChannelLogoutUri = new Uri("https://localhost:PORT/signout-oidc"),
-    Permissions = {
-        OpenIddictConstants.Permissions.Endpoints.Authorization,
-        OpenIddictConstants.Permissions.Endpoints.Logout,
-        OpenIddictConstants.Permissions.Endpoints.Token,
-        OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
-        OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
-        OpenIddictConstants.Permissions.ResponseTypes.Code,
-        OpenIddictConstants.Permissions.Scopes.Email,
-        OpenIddictConstants.Permissions.Scopes.Profile,
-        OpenIddictConstants.Permissions.Scopes.Roles,
-        OpenIddictConstants.Permissions.Prefixes.Scope + "openid",
-        OpenIddictConstants.Permissions.Prefixes.Scope + "api"
+    var oidcClients = new List<OidcClientDto>
+    {
+        new OidcClientDto
+        {
+            ClientId = "your-app-id",
+            ClientSecret = "your-app-secret",
+            DisplayName = "Your Application Name",
+            RedirectUris = { "https://localhost:PORT/signin-oidc" },
+            PostLogoutRedirectUris = { "https://localhost:PORT/signout-callback-oidc" },
+            FrontChannelLogoutUri = "https://localhost:PORT/signout-oidc"
+        }
+    };
+
+    using (var scope = _scopeFactory.CreateScope())
+    {
+        var regService = scope.ServiceProvider.GetRequiredService<IModuleRegistrationService>();
+        await regService.RegisterAsync(roles, permissions, users, oidcClients);
     }
 }
 ```
 
-### 2. Configure OIDC Authentication (Web Apps)
-In your client's `Program.cs`, add the following:
+### 2. Configure OIDC Authentication
+In your client's `Program.cs`, add the standard OIDC configuration. The Identity Service will automatically recognize the `ClientId` you registered in step 1.
 
 ```csharp
 builder.Services.AddAuthentication(options => {
