@@ -61,7 +61,8 @@ public class RegisterModuleConsumer : IConsumer<IRegisterModule>
                 await _roleManager.CreateAsync(new ApplicationRole
                 {
                     Name = rReq.Name,
-                    Description = rReq.Description
+                    Description = rReq.Description,
+                    Module = message.ModuleName
                 });
             }
         }

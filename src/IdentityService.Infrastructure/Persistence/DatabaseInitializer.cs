@@ -82,7 +82,7 @@ public class DatabaseInitializer
         // Create Admin Role
         if (!await _roleManager.RoleExistsAsync(Roles.Administrator))
         {
-            var adminRole = new ApplicationRole { Name = Roles.Administrator, Description = "Full access to the system" };
+            var adminRole = new ApplicationRole { Name = Roles.Administrator, Description = "Full access to the system", Module = "IdentityService" };
             await _roleManager.CreateAsync(adminRole);
 
             // Assign all permissions to Admin

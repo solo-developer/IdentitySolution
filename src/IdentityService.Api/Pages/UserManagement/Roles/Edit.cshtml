@@ -1,0 +1,57 @@
+@page
+@model IdentityService.Api.Pages.UserManagement.Roles.EditModel
+@{
+    ViewData["Title"] = "Edit Role Permissions";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Manage Permissions</h1>
+        <div style="color: var(--text-muted); margin-top: 0.5rem;">
+            Role: <strong>@Model.Role.Name</strong> | Module: <span class="badge badge-success">@Model.Role.Module</span>
+        </div>
+    </div>
+    <a href="/UserManagement/Roles?module=@Model.Role.Module" class="btn btn-secondary">← Back to Roles</a>
+</div>
+
+<form method="post">
+    <div class="card">
+        <h3 style="margin-top:0;">Available Permissions</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+            Select the permissions you want to assign to this role. Only permissions capable of complying with the <strong>@Model.Role.Module</strong> module are shown.
+        </p>
+
+        <div class="permissions-grid">
+            @foreach (var perm in Model.AllPermissions)
+            {
+                <label style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;" class="permission-card">
+                    <input type="checkbox" name="SelectedPermissionIds" value="@perm.Id" checked="@perm.IsAssigned" style="margin-top: 0.25rem;">
+                    <div>
+                        <div style="font-weight: 500;">@perm.Name</div>
+                        <div style="font-size: 0.875rem; color: var(--text-muted);">@perm.Description</div>
+                    </div>
+                </label>
+            }
+        </div>
+
+        @if (Model.AllPermissions.Count == 0)
+        {
+            <div style="text-align:center; padding: 2rem; color: var(--text-muted);">
+                No permissions definition found for module '@Model.Role.Module'.
+                <br>
+                <em>Ensure the module has registered its permissions via the Registration Event.</em>
+            </div>
+        }
+    </div>
+
+    <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+</form>
+
+<style>
+    .permission-card:hover {
+        border-color: var(--primary);
+        background-color: #f9fafb;
+    }
+</style>
