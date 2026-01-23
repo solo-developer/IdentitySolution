@@ -5,7 +5,6 @@ using UiService.Web.Models;
 
 namespace UiService.Web.Controllers;
 
-[Authorize]
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
@@ -16,6 +15,12 @@ public class HomeController : Controller
     }
 
     public IActionResult Index()
+    {
+        return View();
+    }
+
+    [Authorize]
+    public IActionResult Dashboard()
     {
         return View();
     }

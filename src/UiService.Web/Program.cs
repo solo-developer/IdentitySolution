@@ -45,6 +45,18 @@ builder.Services.AddAuthentication(options =>
 
     // Support for Single Logout
     options.SignedOutCallbackPath = "/signout-callback-oidc";
+
+    options.Events = new OpenIdConnectEvents
+    {
+        OnRedirectToIdentityProvider = context =>
+        {
+            if (context.Properties.Items.ContainsKey("prompt"))
+            {
+                context.ProtocolMessage.Prompt = context.Properties.Items["prompt"];
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 // Configure Messaging (MassTransit)
@@ -53,6 +65,7 @@ builder.Services.AddMassTransit(x =>
     x.SetKebabCaseEndpointNameFormatter();
 
     x.AddConsumer<UiService.Web.Consumers.UserLoggedOutConsumer>();
+    x.AddConsumer<UiService.Web.Consumers.UserLoggedInConsumer>();
 
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -69,6 +82,8 @@ builder.Services.AddHostedService<UiService.Web.Workers.ServiceRegistrationWorke
 
 // Custom Session Management
 builder.Services.AddSingleton<UiService.Web.Services.IGlobalSessionStore, UiService.Web.Services.GlobalSessionStore>();
+
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -94,6 +109,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHealthChecks("/health");
+app.MapHub<UiService.Web.Hubs.NotificationHub>("/notificationHub");
 
 app.MapControllerRoute(
     name: "default",

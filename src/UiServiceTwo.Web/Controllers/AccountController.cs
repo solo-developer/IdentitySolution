@@ -21,4 +21,22 @@ public class AccountController : Controller
         // Logout from Identity Service (OIDC)
         return SignOut(new AuthenticationProperties { RedirectUri = "/" }, OpenIdConnectDefaults.AuthenticationScheme);
     }
+
+    [HttpGet]
+    public IActionResult SilentLogin()
+    {
+        var props = new AuthenticationProperties
+        {
+            RedirectUri = Url.Action("SilentLoginCallback"),
+        };
+        props.Items["prompt"] = "none";
+        
+        return Challenge(props, OpenIdConnectDefaults.AuthenticationScheme);
+    }
+
+    [HttpGet]
+    public IActionResult SilentLoginCallback()
+    {
+        return View();
+    }
 }

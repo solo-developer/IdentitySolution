@@ -1,0 +1,26 @@
+
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Silent Login Callback</title>
+</head>
+<body>
+    <script>
+        console.log("Silent login successful. Reloading parent...");
+        try {
+            if (window.parent && window.parent !== window) {
+                // If the parent is the landing page, redirect to dashboard.
+                // Otherwise, just reload helps, but redirect is safer.
+                window.parent.location.href = '/Home/Dashboard';
+            } else {
+                 window.location.href = '/Home/Dashboard';
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    </script>
+</body>
+</html>

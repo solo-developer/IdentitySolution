@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using MassTransit;
+using IdentitySolution.Shared.Events;
 
 namespace IdentityService.Api.Pages.Account;
 
@@ -14,10 +16,17 @@ namespace IdentityService.Api.Pages.Account;
 public class LoginModel : PageModel
 {
     private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public LoginModel(SignInManager<ApplicationUser> signInManager)
+    public LoginModel(
+        SignInManager<ApplicationUser> signInManager,
+        UserManager<ApplicationUser> userManager,
+        IPublishEndpoint publishEndpoint)
     {
         _signInManager = signInManager;
+        _userManager = userManager;
+        _publishEndpoint = publishEndpoint;
     }
 
     [BindProperty]
@@ -52,6 +61,16 @@ public class LoginModel : PageModel
             var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
             if (result.Succeeded)
             {
+                var user = await _userManager.FindByEmailAsync(Input.Email);
+                if (user != null)
+                {
+                    await _publishEndpoint.Publish<IUserLoggedIn>(new
+                    {
+                        UserId = user.Id,
+                        UserName = user.UserName
+                    });
+                }
+
                 return LocalRedirect(returnUrl);
             }
             else
