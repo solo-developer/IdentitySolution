@@ -1,8 +1,10 @@
+using System.IO;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.DataProtection;
 using MassTransit;
 using IdentitySolution.ServiceDiscovery;
+using Microsoft.AspNetCore.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,24 +29,31 @@ builder.Services.AddAuthentication(options =>
 })
 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
-    options.Cookie.Name = "UiService_SSO";
+    options.Cookie.Name = "UiService_App_Session";
     options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.SameSite = SameSiteMode.None; 
+    options.Cookie.Domain = ".identity.local"; 
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
+    options.Cookie.SameSite = SameSiteMode.Lax; 
 })
 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
 {
-    options.Authority = builder.Configuration["IdentityService:Authority"] ?? "https://localhost:7242";
+    options.Authority = "https://auth.identity.local:9000";
     options.ClientId = "ui-client";
     options.ClientSecret = "ui-secret";
     options.ResponseType = "code";
     options.ResponseMode = "query";
-    options.RequireHttpsMetadata = false;
+    options.RequireHttpsMetadata = false; // Set to false to allow shaky local certs
     
-    // Explicitly set these for Edge/Chrome compatibility
-    options.CorrelationCookie.SameSite = SameSiteMode.None;
+    // This is the fix for RemoteCertificateNameMismatch
+    options.BackchannelHttpHandler = new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+    };
+    
+    // Modern settings for shared domain
+    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
     options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.NonceCookie.SameSite = SameSiteMode.None;
+    options.NonceCookie.SameSite = SameSiteMode.Lax;
     options.NonceCookie.SecurePolicy = CookieSecurePolicy.Always;
 
     options.SaveTokens = true;
@@ -106,7 +115,16 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
+                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto |
+                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedHost,
+    KnownNetworks = { },
+    KnownProxies = { }
+});
+
+// app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();

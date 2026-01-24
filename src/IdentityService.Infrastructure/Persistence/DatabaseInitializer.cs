@@ -206,8 +206,8 @@ public class DatabaseInitializer
                 ClientSecret = "ui-secret",
                 DisplayName = "Main UI Service",
                 ClientType = OpenIddictConstants.ClientTypes.Confidential,
-                PostLogoutRedirectUris = { new Uri("https://localhost:7150/signout-callback-oidc") },
-                RedirectUris = { new Uri("https://localhost:7150/signin-oidc") },
+                PostLogoutRedirectUris = { new Uri("https://ui1.identity.local:9000/signout-callback-oidc") },
+                RedirectUris = { new Uri("https://ui1.identity.local:9000/signin-oidc") },
                 Permissions =
                 {
                     OpenIddictConstants.Permissions.Endpoints.Authorization,
@@ -229,8 +229,8 @@ public class DatabaseInitializer
                 ClientSecret = "ui-secret-2",
                 DisplayName = "Second UI Service",
                 ClientType = OpenIddictConstants.ClientTypes.Confidential,
-                PostLogoutRedirectUris = { new Uri("https://localhost:7160/signout-callback-oidc") },
-                RedirectUris = { new Uri("https://localhost:7160/signin-oidc") },
+                PostLogoutRedirectUris = { new Uri("https://ui2.identity.local:9000/signout-callback-oidc") },
+                RedirectUris = { new Uri("https://ui2.identity.local:9000/signin-oidc") },
                 Permissions =
                 {
                     OpenIddictConstants.Permissions.Endpoints.Authorization,

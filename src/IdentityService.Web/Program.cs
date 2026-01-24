@@ -1,3 +1,4 @@
+using System.IO;
 using IdentityService.Infrastructure;
 using IdentityService.Infrastructure.Persistence;
 using IdentityService.Web.Services;
@@ -6,6 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using IdentitySolution.ServiceDiscovery;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.CookiePolicy;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,17 +25,27 @@ builder.Services.AddDataProtection()
 // Add services to the container.
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Configure Cookie Policy for localhost SSO
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.MinimumSameSitePolicy = SameSiteMode.None;
+    options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;
+    options.Secure = CookieSecurePolicy.Always; 
+});
+
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.Name = "Idsrv_SSO";
     options.Cookie.Path = "/";
-    // None + Always is required for modern Chrome/Edge to send cookies across different localhost ports
+    options.Cookie.Domain = ".identity.local"; // Shared domain for SSO
+    // None + Always is the "Nuclear Option" for cross-subdomain SSO.
     options.Cookie.SameSite = SameSiteMode.None; 
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
     options.Cookie.IsEssential = true;
     options.Cookie.HttpOnly = true;
     options.LoginPath = "/Account/Login";
     options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    options.SlidingExpiration = true;
 });
 
 // Add Consul
@@ -71,10 +85,22 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseHttpsRedirection();
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
+                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto |
+                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedHost,
+    // Trust all proxies in local development
+    KnownNetworks = { },
+    KnownProxies = { }
+});
+
+// app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+//app.UseCookiePolicy();
 
 app.UseAuthentication();
 app.UseAuthorization();
