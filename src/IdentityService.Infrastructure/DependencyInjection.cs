@@ -21,14 +21,6 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-        // Use an absolute, solution-independent path for keys to ensure encryption stability on Windows
-        var keysPath = @"C:\temp\IdentitySolution_Keys";
-        if (!Directory.Exists(keysPath)) Directory.CreateDirectory(keysPath);
-
-        services.AddDataProtection()
-            .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
-            .SetApplicationName("IdentitySolution");
-
         services.AddDbContext<ApplicationDbContext>(options =>
         {
             options.UseSqlServer(connectionString);
@@ -43,18 +35,6 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders()
             .AddClaimsPrincipalFactory<ApplicationClaimsPrincipalFactory>();
-
-        services.ConfigureApplicationCookie(options =>
-        {
-            options.Cookie.Name = "Identity.Global.Session";
-            options.Cookie.Path = "/";
-            options.Cookie.SameSite = SameSiteMode.Unspecified; // Some browsers prefer this for cross-port localhost sharing
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
-            options.Cookie.IsEssential = true;
-            options.Cookie.HttpOnly = true;
-            options.LoginPath = "/Account/Login";
-            options.ExpireTimeSpan = TimeSpan.FromDays(30);
-        });
 
         // Configure OpenIddict
         services.AddOpenIddict()

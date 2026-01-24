@@ -11,6 +11,9 @@
 *.sln.docstates
 *.env
 
+# Shared Data Protection Keys (contains sensitive encryption keys)
+SharedKeys/
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

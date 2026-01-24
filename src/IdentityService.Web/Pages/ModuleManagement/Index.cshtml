@@ -1,0 +1,193 @@
+@page
+@model IdentityService.Web.Pages.ModuleManagement.IndexModel
+@{
+    ViewData["Title"] = "Module Management";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Registered Modules</h2>
+            <p class="text-muted">Services registered in Consul service discovery</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button type="button" class="btn btn-outline-primary" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+            </button>
+        </div>
+    </div>
+
+    @if (Model.Services.Any())
+    {
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Total Services</h6>
+                                <h3 class="mb-0">@Model.Services.Count</h3>
+                            </div>
+                            <div class="bg-primary bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-hdd-network fs-3 text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Healthy</h6>
+                                <h3 class="mb-0 text-success">@Model.HealthyCount</h3>
+                            </div>
+                            <div class="bg-success bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-check-circle fs-3 text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Warning</h6>
+                                <h3 class="mb-0 text-warning">@Model.WarningCount</h3>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-exclamation-triangle fs-3 text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Critical</h6>
+                                <h3 class="mb-0 text-danger">@Model.CriticalCount</h3>
+                            </div>
+                            <div class="bg-danger bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-x-circle fs-3 text-danger"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Grid -->
+        <div class="row g-4">
+            @foreach (var service in Model.Services)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white border-0 pt-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="mb-1">@service.Name</h5>
+                                    <small class="text-muted">@service.Module</small>
+                                </div>
+                                <span class="badge @Model.GetStatusBadgeClass(service.Status)">
+                                    @service.Status
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row mb-0 small">
+                                <dt class="col-4">ID:</dt>
+                                <dd class="col-8 text-truncate" title="@service.Id">
+                                    <code class="small">@(service.Id.Length > 12 ? service.Id.Substring(0, 12) + "..." : service.Id)</code>
+                                </dd>
+
+                                <dt class="col-4">Address:</dt>
+                                <dd class="col-8">@service.Address:@service.Port</dd>
+
+                                @if (service.Tags.Any())
+                                {
+                                    <dt class="col-4">Tags:</dt>
+                                    <dd class="col-8">
+                                        @foreach (var tag in service.Tags)
+                                        {
+                                            <span class="badge bg-secondary me-1">@tag</span>
+                                        }
+                                    </dd>
+                                }
+
+                                @if (service.Metadata.Any())
+                                {
+                                    <dt class="col-12 mt-2 mb-1 fw-bold">Metadata:</dt>
+                                    @foreach (var meta in service.Metadata)
+                                    {
+                                        <dt class="col-5 text-truncate" title="@meta.Key">@meta.Key:</dt>
+                                        <dd class="col-7 text-truncate" title="@meta.Value">@meta.Value</dd>
+                                    }
+                                }
+                            </dl>
+                        </div>
+                        <div class="card-footer bg-white border-0">
+                            <div class="d-flex gap-2">
+                                <a href="http://@service.Address:@service.Port/health" 
+                                   target="_blank" 
+                                   class="btn btn-sm btn-outline-primary flex-fill">
+                                    <i class="bi bi-heart-pulse me-1"></i>Health
+                                </a>
+                                <a href="http://@service.Address:@service.Port/swagger" 
+                                   target="_blank" 
+                                   class="btn btn-sm btn-outline-info flex-fill">
+                                    <i class="bi bi-book me-1"></i>API Docs
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-server fs-1 text-muted"></i>
+                <h4 class="mt-3">No Services Registered</h4>
+                <p class="text-muted">
+                    No services are currently registered in Consul.
+                    <br />
+                    Make sure Consul is running and services are configured to register.
+                </p>
+                <div class="mt-4">
+                    <a href="http://localhost:8500" target="_blank" class="btn btn-outline-primary">
+                        <i class="bi bi-box-arrow-up-right me-2"></i>Open Consul UI
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+
+@section Styles {
+    <style>
+        .card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+        }
+    </style>
+}

@@ -9,6 +9,7 @@ public class Permission
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Module { get; set; } = string.Empty; // e.g., "UserManagement", "RoleManagement"
+    public bool IsActive { get; set; } = true;
     
     public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
 }

@@ -1,0 +1,54 @@
+@page
+@model IdentityService.Web.Pages.UserManagement.Users.EditModel
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Edit User: @Model.UserInfo.UserName</h1>
+    <a href="/UserManagement/Users" class="btn btn-secondary">← Back to Users</a>
+</div>
+
+<form method="post">
+    <div class="card">
+        <h3>Account Status</h3>
+        <div class="form-group">
+            <label class="form-label" style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                <input asp-for="IsActive" type="checkbox" />
+                <span>Account is Active</span>
+            </label>
+            <div style="font-size:0.875rem; color:var(--text-muted);">
+                Unchecking this will prevent the user from logging in.
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Assigned Roles (by Module)</h3>
+        
+        @foreach (var group in Model.GroupedRoles)
+        {
+            <div style="margin-bottom: 2rem;">
+                <h4 style="border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; color: var(--primary);">
+                    📦 @group.Key
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
+                    @foreach (var role in group.Value)
+                    {
+                        <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" name="SelectedRoles" value="@role.Name" checked="@Model.SelectedRoles.Contains(role.Name)" />
+                            <div>
+                                <div style="font-weight: 500;">@role.Name</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">@role.Description</div>
+                            </div>
+                        </label>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+</form>

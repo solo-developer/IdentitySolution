@@ -1,9 +1,19 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.DataProtection;
 using MassTransit;
 using IdentitySolution.ServiceDiscovery;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Shared Data Protection with hardcoded key (DEVELOPMENT ONLY)
+var keysFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IdentitySolution", "SharedKeys");
+Directory.CreateDirectory(keysFolder);
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
+    .SetApplicationName("IdentitySolution")
+    .ProtectKeysWithDpapi(protectToLocalMachine: true);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -17,9 +27,10 @@ builder.Services.AddAuthentication(options =>
 })
 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
-    options.Cookie.Name = "SSO.Cookie.Two"; // Distinct cookie name
+    options.Cookie.Name = "UiServiceTwo_SSO";
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.None;
 })
 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
 {
@@ -28,7 +39,14 @@ builder.Services.AddAuthentication(options =>
     options.ClientSecret = "ui-secret-2";
     options.ResponseType = "code";
     options.ResponseMode = "query";
+    options.RequireHttpsMetadata = false;
     
+    // Explicitly set these for Edge/Chrome compatibility
+    options.CorrelationCookie.SameSite = SameSiteMode.None;
+    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.NonceCookie.SameSite = SameSiteMode.None;
+    options.NonceCookie.SecurePolicy = CookieSecurePolicy.Always;
+
     options.SaveTokens = true;
     options.GetClaimsFromUserInfoEndpoint = true;
     

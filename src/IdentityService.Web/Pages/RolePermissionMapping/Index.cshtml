@@ -1,0 +1,287 @@
+@page
+@model IdentityService.Web.Pages.RolePermissionMapping.IndexModel
+@{
+    ViewData["Title"] = "Role Permission Mapping";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Role Permission Mapping</h2>
+            <p class="text-muted">Assign permissions to roles by module</p>
+        </div>
+    </div>
+
+    <!-- Module Selection -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" id="moduleForm">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Select Module</label>
+                        <select name="module" class="form-select form-select-lg" onchange="this.form.submit()">
+                            <option value="">-- Select a Module --</option>
+                            @foreach (var module in Model.AvailableModules)
+                            {
+                                <option value="@module" selected="@(module == Model.SelectedModule)">@module</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SelectedModule))
+    {
+        <div class="row">
+            <!-- Roles List -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Roles in @Model.SelectedModule</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (Model.RolesInModule.Any())
+                        {
+                            <div class="list-group list-group-flush">
+                                @foreach (var role in Model.RolesInModule)
+                                {
+                                    <a href="?module=@Model.SelectedModule&roleId=@role.Id" 
+                                       class="list-group-item list-group-item-action @(role.Id == Model.SelectedRoleId ? "active" : "")">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>@role.Name</strong>
+                                                @if (!string.IsNullOrEmpty(role.Description))
+                                                {
+                                                    <br />
+                                                    <small class="@(role.Id == Model.SelectedRoleId ? "text-white-50" : "text-muted")">@role.Description</small>
+                                                }
+                                            </div>
+                                            @if (role.Id == Model.SelectedRoleId)
+                                            {
+                                                <i class="bi bi-chevron-right"></i>
+                                            }
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="p-4 text-center text-muted">
+                                <i class="bi bi-inbox fs-3"></i>
+                                <p class="mt-2">No roles in this module</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permissions Tree -->
+            <div class="col-md-8">
+                @if (!string.IsNullOrEmpty(Model.SelectedRoleId))
+                {
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Permissions for @Model.SelectedRoleName</h5>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="expandAll()">
+                                    <i class="bi bi-arrows-expand"></i> Expand All
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" id="permissionForm">
+                                <input type="hidden" name="roleId" value="@Model.SelectedRoleId" />
+                                <input type="hidden" name="module" value="@Model.SelectedModule" />
+                                
+                                <div class="permission-tree">
+                                    @if (Model.PermissionTree.Any())
+                                    {
+                                        @foreach (var category in Model.PermissionTree)
+                                        {
+                                            <div class="tree-category mb-3">
+                                                <div class="category-header p-3 bg-light rounded">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input category-checkbox" 
+                                                               type="checkbox" 
+                                                               id="category_@category.Key.Replace(" ", "_")"
+                                                               data-category="@category.Key"
+                                                               onchange="toggleCategory(this)">
+                                                        <label class="form-check-label fw-bold" for="category_@category.Key.Replace(" ", "_")">
+                                                            <i class="bi bi-folder2-open text-warning me-2"></i>
+                                                            @category.Key
+                                                            <span class="badge bg-secondary ms-2">@category.Value.Count</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="category-permissions ms-4 mt-2">
+                                                    @foreach (var permission in category.Value)
+                                                    {
+                                                        <div class="form-check mb-2 p-2 permission-item @(permission.IsAssigned ? "bg-light" : "")" 
+                                                             data-category="@category.Key">
+                                                            <input class="form-check-input permission-checkbox" 
+                                                                   type="checkbox" 
+                                                                   name="selectedPermissions" 
+                                                                   value="@permission.Id" 
+                                                                   id="perm_@permission.Id"
+                                                                   checked="@permission.IsAssigned"
+                                                                   onchange="updateCategoryCheckbox(this)">
+                                                            <label class="form-check-label" for="perm_@permission.Id">
+                                                                <strong>@permission.Name</strong>
+                                                                @if (!string.IsNullOrEmpty(permission.Description))
+                                                                {
+                                                                    <br />
+                                                                    <small class="text-muted">@permission.Description</small>
+                                                                }
+                                                            </label>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center py-5 text-muted">
+                                            <i class="bi bi-shield-x fs-1"></i>
+                                            <p class="mt-3">No permissions available for this module</p>
+                                        </div>
+                                    }
+                                </div>
+
+                                @if (Model.PermissionTree.Any())
+                                {
+                                    <div class="mt-4 pt-3 border-top">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-save me-2"></i>Save Permissions
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                                            <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+                                        </button>
+                                    </div>
+                                }
+                            </form>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-arrow-left-circle fs-1 text-muted"></i>
+                            <p class="text-muted mt-3">Select a role to manage permissions</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-diagram-3 fs-1 text-muted"></i>
+                <p class="text-muted mt-3">Select a module to view roles and permissions</p>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize category checkboxes based on current state
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.category-checkbox').forEach(function(categoryCheckbox) {
+                updateCategoryCheckboxState(categoryCheckbox);
+            });
+        });
+
+        function toggleCategory(checkbox) {
+            const category = checkbox.dataset.category;
+            const permissionCheckboxes = document.querySelectorAll(`.permission-checkbox[data-category="${category}"]`);
+            
+            permissionCheckboxes.forEach(function(permCheckbox) {
+                permCheckbox.checked = checkbox.checked;
+            });
+        }
+
+        function updateCategoryCheckbox(permissionCheckbox) {
+            const categoryName = permissionCheckbox.closest('[data-category]').dataset.category;
+            const categoryCheckbox = document.querySelector(`.category-checkbox[data-category="${categoryName}"]`);
+            
+            if (categoryCheckbox) {
+                updateCategoryCheckboxState(categoryCheckbox);
+            }
+        }
+
+        function updateCategoryCheckboxState(categoryCheckbox) {
+            const category = categoryCheckbox.dataset.category;
+            const permissionCheckboxes = Array.from(document.querySelectorAll(`.permission-item[data-category="${category}"] .permission-checkbox`));
+            
+            if (permissionCheckboxes.length === 0) return;
+            
+            const checkedCount = permissionCheckboxes.filter(cb => cb.checked).length;
+            
+            if (checkedCount === 0) {
+                categoryCheckbox.checked = false;
+                categoryCheckbox.indeterminate = false;
+            } else if (checkedCount === permissionCheckboxes.length) {
+                categoryCheckbox.checked = true;
+                categoryCheckbox.indeterminate = false;
+            } else {
+                categoryCheckbox.checked = false;
+                categoryCheckbox.indeterminate = true;
+            }
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.category-permissions').forEach(function(el) {
+                el.style.display = 'block';
+            });
+        }
+
+        function resetForm() {
+            location.reload();
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .permission-tree {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .tree-category {
+            border-left: 3px solid #e9ecef;
+            padding-left: 1rem;
+        }
+        
+        .permission-item {
+            border-radius: 0.25rem;
+            transition: all 0.2s;
+        }
+        
+        .permission-item:hover {
+            background-color: #f8f9fa !important;
+        }
+        
+        .category-header {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .category-header:hover {
+            background-color: #e9ecef !important;
+        }
+        
+        .form-check-input:indeterminate {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+    </style>
+}
