@@ -9,14 +9,23 @@ using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Shared Data Protection with hardcoded key (DEVELOPMENT ONLY)
-var keysFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IdentitySolution", "SharedKeys");
+// ==============================================================================================
+// WARNING: STATIC KEY STORAGE IN FILE SYSTEM
+// ==============================================================================================
+// You rely on the file system for Data Protection keys. 
+// Since your services run on different machines, they DO NOT share this folder contents automatically.
+//
+// YOU MUST MANUALLY COPY the XML key files from this 'Keys' folder to the 'Keys' folder 
+// of every other machine hosting `UiService` or `UiServiceTwo`.
+//
+// If the keys do not match EXACTLY, Cross-App SSO will FAIL.
+// ==============================================================================================
+var keysFolder = Path.Combine(AppContext.BaseDirectory, "Keys");
 Directory.CreateDirectory(keysFolder);
 
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
-    .SetApplicationName("IdentitySolution")
-    .ProtectKeysWithDpapi(protectToLocalMachine: true);
+    .SetApplicationName("IdentitySolution");
 
 // Add services to the container.
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -46,6 +55,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.Logger.LogWarning("==============================================================================================");
+app.Logger.LogWarning("WARNING: STATIC KEY STORAGE IN FILE SYSTEM");
+app.Logger.LogWarning("YOU MUST MANUALLY COPY the XML key files from 'Keys' folder to all other machines.");
+app.Logger.LogWarning("If the keys do not match EXACTLY, Cross-App SSO will FAIL.");
+app.Logger.LogWarning("==============================================================================================");
 
 app.UseConsul();
 

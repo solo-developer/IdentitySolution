@@ -6,14 +6,13 @@ using IdentitySolution.ServiceDiscovery;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Shared Data Protection with hardcoded key (DEVELOPMENT ONLY)
-var keysFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "IdentitySolution", "SharedKeys");
+// Static Key Storage in File System
+var keysFolder = Path.Combine(AppContext.BaseDirectory, "Keys");
 Directory.CreateDirectory(keysFolder);
 
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
-    .SetApplicationName("IdentitySolution")
-    .ProtectKeysWithDpapi(protectToLocalMachine: true);
+    .SetApplicationName("IdentitySolution");
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
