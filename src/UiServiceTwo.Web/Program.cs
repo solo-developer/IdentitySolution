@@ -95,6 +95,7 @@ builder.Services.AddMassTransit(x =>
 
 // Configure Service Discovery
 builder.Services.AddConsulConfig(builder.Configuration);
+builder.Services.AddScoped<IdentitySolution.ServiceDiscovery.IModuleRegistrationService, IdentitySolution.ServiceDiscovery.ModuleRegistrationService>();
 builder.Services.AddHostedService<UiServiceTwo.Web.Workers.ServiceRegistrationWorker>();
 
 // Custom Session Management
