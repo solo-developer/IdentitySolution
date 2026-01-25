@@ -28,18 +28,18 @@ public class ServiceRegistrationWorker : BackgroundService
         // Define module-specific data to be seeded in IdentityService
         var roles = new List<RoleDto>
         {
-            new RoleDto { Name = "UiManager", Description = "Manager for UI Service" }
+            new RoleDto { Name = "LoanManager", Description = "Manager for loan" }
         };
 
         var permissions = new List<PermissionDto>
         {
-            new PermissionDto { Name = "ui.view.dashboard", Module = "UI", Description = "View UI Dashboard" },
-            new PermissionDto { Name = "ui.manage.settings", Module = "UI", Description = "Manage UI Settings" }
+            new PermissionDto { Name = "loams.facilitysetup", Module = "LOAMS", Description = "manages facilities" },
+            new PermissionDto { Name = "loams.approvalunit", Module = "LOAMS", Description = "manages approval units" }
         };
 
         var users = new List<UserDto>
         {
-            new UserDto { UserName = "uisupervisor", Email = "supervisor@ui.com", FullName = "UI Supervisor" }
+            new UserDto { UserName = "approvalUnitUser", Email = "supervisor@ui.com", FullName = "Approval Unit User" }
         };
 
         var configSection = _configuration.GetSection("IdentityClient");

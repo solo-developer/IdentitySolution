@@ -4,23 +4,23 @@ public static class Permissions
 {
     public static class Users
     {
-        public const string View = "Permissions.Users.View";
-        public const string Create = "Permissions.Users.Create";
-        public const string Edit = "Permissions.Users.Edit";
-        public const string Delete = "Permissions.Users.Delete";
+        public const string View = "UserManagement.Users.View";
+        public const string Create = "UserManagement.Users.Create";
+        public const string Edit = "UserManagement.Users.Edit";
+        public const string Delete = "UserManagement.Users.Delete";
     }
 
     public static class Roles
     {
-        public const string View = "Permissions.Roles.View";
-        public const string Create = "Permissions.Roles.Create";
-        public const string Edit = "Permissions.Roles.Edit";
-        public const string Delete = "Permissions.Roles.Delete";
+        public const string View = "UserManagement.Roles.View";
+        public const string Create = "UserManagement.Roles.Create";
+        public const string Edit = "UserManagement.Roles.Edit";
+        public const string Delete = "UserManagement.Roles.Delete";
     }
     
     public static class PermissionsManagement
     {
-        public const string View = "Permissions.Permissions.View";
-        public const string Assign = "Permissions.Permissions.Assign";
+        public const string View = "UserManagement.Permissions.View";
+        public const string Assign = "UserManagement.Permissions.Assign";
     }
 }

@@ -50,7 +50,7 @@ public class DatabaseInitializer
         await SeedRolesAndPermissionsAsync();
         await SeedAdminUserAsync();
         await SeedOidcScopesAsync();
-        await SeedOidcClientsAsync();
+        //await SeedOidcClientsAsync();
     }
 
     private async Task SeedRolesAndPermissionsAsync()

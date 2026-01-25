@@ -140,6 +140,39 @@ public class UserManagementController : ControllerBase
         return BadRequest(result.Errors);
     }
 
+    [HttpPost("users")]
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+    {
+        if (await _userManager.FindByEmailAsync(request.Email) != null)
+            return BadRequest("Email already exists");
+
+        if (await _userManager.FindByNameAsync(request.UserName) != null)
+            return BadRequest("Username already exists");
+
+        var user = new ApplicationUser
+        {
+            UserName = request.UserName,
+            Email = request.Email,
+            FullName = request.FullName,
+            IsActive = true
+        };
+
+        var result = await _userManager.CreateAsync(user, request.Password);
+
+        if (!result.Succeeded) return BadRequest(result.Errors);
+
+        await _publishEndpoint.Publish<IUserCreated>(new
+        {
+            UserId = user.Id,
+            Email = user.Email,
+            UserName = user.UserName,
+            FullName = user.FullName,
+            IsActive = user.IsActive
+        });
+
+        return Ok(new { id = user.Id });
+    }
+
     #endregion
 
     #region Module Management
@@ -237,7 +270,21 @@ public class UserManagementController : ControllerBase
         };
 
         var result = await _roleManager.CreateAsync(role);
-        return result.Succeeded ? Ok(new { id = role.Id }) : BadRequest(result.Errors);
+        
+        if (result.Succeeded)
+        {
+            await _publishEndpoint.Publish<IRoleCreated>(new
+            {
+                RoleId = role.Id,
+                Name = role.Name,
+                Description = role.Description,
+                Module = role.Module
+            });
+            
+            return Ok(new { id = role.Id });
+        }
+        
+        return BadRequest(result.Errors);
     }
 
     [HttpPut("roles/{id}/permissions")]
@@ -268,6 +315,21 @@ public class UserManagementController : ControllerBase
         }
 
         await _context.SaveChangesAsync();
+
+        // Fetch the permission names for the event
+        var updatedPermissions = await _context.Permissions
+            .Where(p => request.PermissionIds.Contains(p.Id))
+            .Select(p => p.Name)
+            .ToListAsync();
+
+        await _publishEndpoint.Publish<IRoleUpdated>(new
+        {
+            RoleId = role.Id,
+            Name = role.Name,
+            Module = role.Module,
+            Permissions = updatedPermissions
+        });
+
         return Ok();
     }
 
