@@ -15,11 +15,13 @@ public class IndexModel : PageModel
 {
     private readonly ApplicationDbContext _context;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly Consul.IConsulClient _consulClient;
 
-    public IndexModel(ApplicationDbContext context, IPublishEndpoint publishEndpoint)
+    public IndexModel(ApplicationDbContext context, IPublishEndpoint publishEndpoint, Consul.IConsulClient consulClient)
     {
         _context = context;
         _publishEndpoint = publishEndpoint;
+        _consulClient = consulClient;
     }
 
     public List<PermissionViewModel> Permissions { get; set; } = new();
@@ -33,11 +35,22 @@ public class IndexModel : PageModel
         StatusFilter = status;
 
         // Get all available modules
-        AvailableModules = await _context.Permissions
+        // Get available modules from Consul + DB
+        var services = await _consulClient.Catalog.Services();
+        var consulModules = services.Response.Keys
+            .Where(k => !string.Equals(k, "consul", StringComparison.OrdinalIgnoreCase) && 
+                        !string.Equals(k, "IdentityService", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        var dbModules = await _context.Permissions
             .Select(p => p.Module)
             .Distinct()
-            .OrderBy(m => m)
             .ToListAsync();
+
+        AvailableModules = consulModules.Union(dbModules)
+            .Distinct()
+            .OrderBy(m => m)
+            .ToList();
 
         // Query permissions
         var query = _context.Permissions.AsQueryable();
@@ -70,22 +83,30 @@ public class IndexModel : PageModel
             .ToListAsync();
     }
 
-    public async Task<IActionResult> OnPostCreateAsync(CreatePermissionRequest request, string? newModule)
+    public async Task<IActionResult> OnPostCreateAsync(CreatePermissionRequest request)
     {
-        if (!ModelState.IsValid)
-        {
-            return Page();
-        }
+        if (!ModelState.IsValid) return Page();
 
-        // Use new module if provided, otherwise use selected module
-        var module = !string.IsNullOrWhiteSpace(newModule) ? newModule.Trim() : request.Module;
+        // Validate Module Exists
+        var services = await _consulClient.Catalog.Services();
+        var knownModules = services.Response.Keys.ToList();
+        var dbModules = await _context.Permissions.Select(p => p.Module).Distinct().ToListAsync();
+        
+        if (!knownModules.Contains(request.Module, StringComparer.OrdinalIgnoreCase) && 
+            !dbModules.Contains(request.Module, StringComparer.OrdinalIgnoreCase))
+        {
+             ModelState.AddModelError("Module", $"Module '{request.Module}' is not a valid registered module.");
+             // Refresh available modules for re-redisplay
+             AvailableModules = knownModules.Union(dbModules).Distinct().OrderBy(m => m).ToList();
+             return Page();
+        }
 
         var permission = new Permission
         {
             Id = Guid.NewGuid(),
             Name = request.Name,
             Description = request.Description,
-            Module = module,
+            Module = request.Module,
             IsActive = true
         };
 
@@ -103,7 +124,7 @@ public class IndexModel : PageModel
         });
 
         TempData["SuccessMessage"] = "Permission created successfully";
-        return RedirectToPage(new { module = module });
+        return RedirectToPage(new { module = request.Module });
     }
 
     public async Task<IActionResult> OnPostUpdateAsync(Guid permissionId, UpdatePermissionRequest request)

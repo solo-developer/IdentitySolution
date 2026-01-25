@@ -20,12 +20,18 @@ public class IndexModel : PageModel
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly IApplicationDbContext _context;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IdentityService.Web.Services.IConsulService _consulService;
 
-    public IndexModel(RoleManager<ApplicationRole> roleManager, IApplicationDbContext context, IPublishEndpoint publishEndpoint)
+    public IndexModel(
+        RoleManager<ApplicationRole> roleManager, 
+        IApplicationDbContext context, 
+        IPublishEndpoint publishEndpoint,
+        IdentityService.Web.Services.IConsulService consulService)
     {
         _roleManager = roleManager;
         _context = context;
         _publishEndpoint = publishEndpoint;
+        _consulService = consulService;
     }
 
     [BindProperty(SupportsGet = true)]
@@ -41,12 +47,8 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        // Get Distinct Modules
-        Modules = await _context.Permissions
-            .Select(p => p.Module)
-            .Distinct()
-            .OrderBy(m => m)
-            .ToListAsync();
+        // Get Distinct Modules from Consul + DB
+        Modules = await _consulService.GetAllModulesAsync();
 
         if (!string.IsNullOrEmpty(Module))
         {
@@ -96,6 +98,15 @@ public class IndexModel : PageModel
         if (await _roleManager.RoleExistsAsync(CreateRoleInput.Name))
         {
              ModelState.AddModelError("", "Role already exists.");
+             await OnGetAsync();
+             return Page();
+        }
+
+        // Validate Module
+        var knownModules = await _consulService.GetAllModulesAsync();
+        if (!knownModules.Contains(CreateRoleInput.Module, StringComparer.OrdinalIgnoreCase))
+        {
+             ModelState.AddModelError("", $"Module '{CreateRoleInput.Module}' is not a valid registered module.");
              await OnGetAsync();
              return Page();
         }

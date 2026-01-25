@@ -2,6 +2,7 @@ using IdentityService.Web.ViewModels;
 using IdentityService.Application.Interfaces;
 using IdentityService.Domain.Constants;
 using IdentityService.Domain.Entities;
+using IdentityService.Web.Services;
 using IdentitySolution.Shared.Events;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
@@ -24,17 +25,20 @@ public class UserManagementController : ControllerBase
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly IApplicationDbContext _context;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IConsulService _consulService;
 
     public UserManagementController(
         UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager,
         IApplicationDbContext context,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        IConsulService consulService)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _context = context;
         _publishEndpoint = publishEndpoint;
+        _consulService = consulService;
     }
 
     #region User Management
@@ -180,15 +184,8 @@ public class UserManagementController : ControllerBase
     [HttpGet("modules")]
     public async Task<ActionResult<List<string>>> GetModules()
     {
-        // Get distinct modules from Permissions. 
-        // We could also get from Roles, but Permissions is the source of truth for "Registered Modules".
-        var modules = await _context.Permissions
-            .Select(p => p.Module)
-            .Distinct()
-            .OrderBy(m => m)
-            .ToListAsync();
-
-        return Ok(modules);
+        var allModules = await _consulService.GetAllModulesAsync();
+        return Ok(allModules);
     }
 
     #endregion
@@ -262,11 +259,19 @@ public class UserManagementController : ControllerBase
         if (await _roleManager.RoleExistsAsync(request.Name))
             return BadRequest("Role already exists");
 
+        // Validate Module Exists (Security check)
+        var knownModules = await _consulService.GetAllModulesAsync();
+        
+        if (!knownModules.Contains(request.Module, StringComparer.OrdinalIgnoreCase))
+        {
+             return BadRequest($"Module '{request.Module}' is not a valid registered module.");
+        }
+
         var role = new ApplicationRole
         {
             Name = request.Name,
             Description = request.Description,
-            Module = request.Module // Assign module from request
+            Module = request.Module
         };
 
         var result = await _roleManager.CreateAsync(role);
@@ -303,9 +308,6 @@ public class UserManagementController : ControllerBase
         // Add new permissions
         if (request.PermissionIds != null && request.PermissionIds.Any())
         {
-            // Optional: Validate that permissions belong to the same module as the role? 
-            // The requirement "module role wise permissions" hints at this, but flexibility might be better.
-            
             var newPermissions = request.PermissionIds.Select(pid => new RolePermission
             {
                 RoleId = id,
@@ -360,6 +362,44 @@ public class UserManagementController : ControllerBase
             Module = p.Module,
             IsAssigned = false
         }));
+    }
+
+    [HttpPost("permissions")]
+    public async Task<IActionResult> CreatePermission([FromBody] CreatePermissionRequest request)
+    {
+        if (await _context.Permissions.AnyAsync(p => p.Name == request.Name))
+            return BadRequest($"Permission '{request.Name}' already exists.");
+
+         // Validate Module Exists (Security check)
+        var knownModules = await _consulService.GetAllModulesAsync();
+        
+        if (!knownModules.Contains(request.Module, StringComparer.OrdinalIgnoreCase))
+        {
+             return BadRequest($"Module '{request.Module}' is not a valid registered module.");
+        }
+
+        var permission = new Permission
+        {
+            Id = Guid.NewGuid(),
+            Name = request.Name,
+            Description = request.Description,
+            Module = request.Module,
+            IsActive = true
+        };
+
+        _context.Permissions.Add(permission);
+        await _context.SaveChangesAsync();
+
+        await _publishEndpoint.Publish<IPermissionCreated>(new
+        {
+            PermissionId = permission.Id,
+            Name = permission.Name,
+            Description = permission.Description,
+            Module = permission.Module,
+            IsActive = permission.IsActive
+        });
+
+        return Ok(new { id = permission.Id });
     }
 
     #endregion
