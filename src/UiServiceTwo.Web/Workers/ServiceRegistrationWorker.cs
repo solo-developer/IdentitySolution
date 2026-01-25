@@ -33,7 +33,7 @@ public class ServiceRegistrationWorker : BackgroundService
 
         var permissions = new List<PermissionDto>
         {
-            new PermissionDto { Name = "Recovery.dashboard", Module = "UI2", Description = "View UI Two Dashboard" }
+            new PermissionDto { Name = "Recovery.dashboard", Module = "Recovery", Description = "View UI Two Dashboard" }
         };
 
         var users = new List<UserDto>

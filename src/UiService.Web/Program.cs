@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.DataProtection;
 using MassTransit;
+using MassTransit;
 using IdentitySolution.ServiceDiscovery;
+using UiService.Web.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -119,5 +121,8 @@ app.MapHub<UiService.Web.Hubs.NotificationHub>("/notificationHub");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Block startup until Identity Service is reachable via Consul
+await app.WaitForIdentityServiceAsync();
 
 app.Run();
