@@ -25,7 +25,7 @@ public static class HostExtensions
 
                  logger.LogInformation("Looking up IdentityService in Consul...");
 
-                 var discoveryPolicy = Policy
+                 var discoveryPolicy = Polly.Policy
                     .HandleResult<ServiceEntry[]>(services => services == null || services.Length == 0)
                     .WaitAndRetryAsync(
                         retryCount: 10,
@@ -80,7 +80,7 @@ public static class HostExtensions
                  if (resolved)
                  {
                      // 2. Wait for TCP Reachability
-                     var tcpPolicy = Policy
+                     var tcpPolicy = Polly.Policy
                        .Handle<Exception>()
                        .WaitAndRetryAsync(
                            retryCount: 20, 
