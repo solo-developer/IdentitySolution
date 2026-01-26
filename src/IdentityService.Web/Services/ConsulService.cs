@@ -66,23 +66,12 @@ public class ConsulService : IConsulService
 
     public async Task<List<string>> GetAllModulesAsync()
     {
-        // 1. Get modules from Consul Catalog (Cluster-wide Services)
-        // Using Catalog.Services() instead of Agent.Services() to see everything
-        var services = await _consulClient.Catalog.Services();
-        var consulModules = services.Response.Keys
-            .Where(k => !string.Equals(k, "consul", StringComparison.OrdinalIgnoreCase) && 
-                        !string.Equals(k, "IdentityService", StringComparison.OrdinalIgnoreCase))
-            .ToList();
-
-        // 2. Get historical modules from DB
-        var dbModules = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
-             _context.Permissions.Select(p => p.Module).Distinct());
-
-        // 3. Merge
-        return consulModules.Union(dbModules)
-            .Distinct()
-            .OrderBy(m => m)
-            .ToList();
+        // Get active modules from the synchronized Modules table
+        return await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+             _context.Modules
+                .Where(m => m.IsActive)
+                .Select(m => m.Name)
+                .OrderBy(m => m));
     }
 }
 

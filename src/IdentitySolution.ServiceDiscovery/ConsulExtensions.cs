@@ -45,6 +45,10 @@ public static class ConsulExtensions
                 Timeout = TimeSpan.FromSeconds(5),
                 DeregisterCriticalServiceAfter = TimeSpan.FromMinutes(1),
                 TLSSkipVerify = true // Since we are using localhost self-signed certs
+            },
+            Meta = new Dictionary<string, string>
+            {
+                { "Module", serviceName }
             }
         };
 

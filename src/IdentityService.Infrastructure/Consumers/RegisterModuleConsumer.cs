@@ -37,6 +37,24 @@ public class RegisterModuleConsumer : IConsumer<IRegisterModule>
         var message = context.Message;
         _logger.LogInformation("Processing registration for module: {ModuleName}", message.ModuleName);
 
+        // 0. Get or Create Module Entity
+        var moduleEntity = await _context.Modules
+            .FirstOrDefaultAsync(m => m.Name == message.ModuleName);
+
+        if (moduleEntity == null)
+        {
+            moduleEntity = new Module
+            {
+                Name = message.ModuleName,
+                Description = $"Automatically registered via RabbitMQ for {message.ModuleName}",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Modules.Add(moduleEntity);
+            await _context.SaveChangesAsync(); // Save to get Id
+            _logger.LogInformation("Created new Module entity: {ModuleName}", message.ModuleName);
+        }
+
         // 1. Process Permissions
         foreach (var pReq in message.Permissions)
         {
@@ -46,7 +64,8 @@ public class RegisterModuleConsumer : IConsumer<IRegisterModule>
                 {
                     Id = Guid.NewGuid(),
                     Name = pReq.Name,
-                    Module = pReq.Module,
+                    Module = pReq.Module, // Keeping backward compatibility
+                    ModuleId = moduleEntity.Id,
                     Description = pReq.Description
                 });
             }
@@ -62,7 +81,8 @@ public class RegisterModuleConsumer : IConsumer<IRegisterModule>
                 {
                     Name = rReq.Name,
                     Description = rReq.Description,
-                    Module = message.ModuleName
+                    Module = message.ModuleName, // Keeping backward compatibility
+                    ModuleId = moduleEntity.Id
                 });
             }
         }

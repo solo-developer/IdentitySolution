@@ -50,8 +50,8 @@ builder.Services.AddAuthentication(options =>
 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
 {
     options.Authority = builder.Configuration["IdentityService:Authority"] ?? "https://localhost:7242";
-    options.ClientId = "ui-client-2"; // Distinct client id
-    options.ClientSecret = "ui-secret-2";
+    options.ClientId = builder.Configuration["IdentityClient:ClientId"] ?? "ui-client-2";
+    options.ClientSecret = builder.Configuration["IdentityClient:ClientSecret"] ?? "ui-secret-2";
     options.ResponseType = "code";
     options.ResponseMode = "query";
     options.RequireHttpsMetadata = false;

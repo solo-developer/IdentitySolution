@@ -25,56 +25,59 @@ public static class HostExtensions
 
                  logger.LogInformation("Looking up IdentityService in Consul...");
 
-                 var discoveryPolicy = Polly.Policy
-                    .HandleResult<ServiceEntry[]>(services => services == null || services.Length == 0)
-                    .WaitAndRetryAsync(
-                        retryCount: 10,
-                        sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(3),
-                        onRetry: (delegateResult, timeSpan, retryCount, context) =>
-                        {
-                            logger.LogInformation($"IdentityService not found in Consul yet... (Attempt {retryCount}/10)");
-                        });
+                 var maxRetryTime = TimeSpan.FromMinutes(10);
+                 var startedAt = DateTime.UtcNow;
 
                  string? host = null;
                  int port = 0;
                  bool resolved = false;
 
-                 // 1. Wait for Service Discovery (Consul)
-                 var result = await discoveryPolicy.ExecuteAsync(async () =>
+                 while (!resolved && (DateTime.UtcNow - startedAt) < maxRetryTime)
                  {
-                    try {
-                        var services = await consulClient.Health.Service(IdentityServiceName, tag: null, passingOnly: true);
-                        return services.Response;
-                    } catch { return null; }
-                 });
+                     // 1. Try Configured Authority URL (Priority for overriding)
+                     var authority = configuration["IdentityService:Authority"];
+                     if (!string.IsNullOrEmpty(authority) && Uri.TryCreate(authority, UriKind.Absolute, out var uri))
+                     {
+                         host = uri.Host;
+                         port = uri.Port > 0 ? uri.Port : (uri.Scheme == "https" ? 443 : 80);
+                         logger.LogInformation($"Resolved IdentityService from Config: {host}:{port}");
+                         resolved = true;
+                     }
+                     
+                     // 2. Try Service Discovery (Consul) if config didn't give a result OR we want to verify it
+                     if (!resolved)
+                     {
+                         try 
+                         {
+                             var services = await consulClient.Health.Service(IdentityServiceName, tag: null, passingOnly: true);
+                             if (services.Response != null && services.Response.Length > 0)
+                             {
+                                 var serviceEntry = services.Response[0];
+                                 host = serviceEntry.Service.Address;
+                                 port = serviceEntry.Service.Port;
+                        
+                                 // Fix for Docker/Consul binding to 0.0.0.0
+                                 if ((string.IsNullOrEmpty(host) || host == "0.0.0.0" || host == "::" || host == "[::]") && 
+                                     app.ApplicationServices.GetRequiredService<IHostEnvironment>().IsDevelopment()) 
+                                 {
+                                     host = "localhost";
+                                 }
+                                 
+                                 logger.LogInformation($"Found IdentityService via Consul at {host}:{port}");
+                                 resolved = true;
+                             }
+                         } 
+                         catch (Exception ex) 
+                         { 
+                             logger.LogWarning($"Consul lookup failed: {ex.Message}");
+                         }
+                     }
 
-                 if (result != null && result.Length > 0)
-                 {
-                    var serviceEntry = result[0];
-                    host = serviceEntry.Service.Address;
-                    port = serviceEntry.Service.Port;
-            
-                    if (string.IsNullOrEmpty(host) || host == "0.0.0.0") host = "localhost";
-                    
-                    logger.LogInformation($"Found IdentityService via Consul at {host}:{port}");
-                    resolved = true;
-                 }
-                 else
-                 {
-                    // FALLBACK: Try Configured Authority URL
-                    logger.LogWarning("Consul lookup failed. Falling back to 'IdentityService:Authority' configuration...");
-                    var authority = configuration["IdentityService:Authority"];
-                    if (!string.IsNullOrEmpty(authority) && Uri.TryCreate(authority, UriKind.Absolute, out var uri))
-                    {
-                        host = uri.Host;
-                        port = uri.Port > 0 ? uri.Port : (uri.Scheme == "https" ? 443 : 80);
-                        logger.LogInformation($"Resolved IdentityService from Config: {host}:{port}");
-                        resolved = true;
-                    }
-                    else
-                    {
-                        logger.LogError("Could not resolve IdentityService from Consul OR Config.");
-                    }
+                     if (!resolved)
+                     {
+                         logger.LogInformation("IdentityService not found in Config OR Consul. Retrying in 3 seconds...");
+                         await Task.Delay(3000);
+                     }
                  }
 
                  if (resolved)
@@ -111,6 +114,10 @@ public static class HostExtensions
                      // SIGNAL READY
                      startupStatus.IsReady = true;
                      logger.LogInformation("Dependency Check Passed. Application is now accepting requests.");
+                 }
+                 else
+                 {
+                     logger.LogError("Could not resolve IdentityService after maximum retry time.");
                  }
             }
             catch (Exception ex)

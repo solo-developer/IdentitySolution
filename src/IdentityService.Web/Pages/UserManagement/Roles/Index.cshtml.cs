@@ -102,9 +102,10 @@ public class IndexModel : PageModel
              return Page();
         }
 
-        // Validate Module
-        var knownModules = await _consulService.GetAllModulesAsync();
-        if (!knownModules.Contains(CreateRoleInput.Module, StringComparer.OrdinalIgnoreCase))
+        // Validate Module and Get ID
+        var moduleEntity = await _context.Modules.FirstOrDefaultAsync(m => m.Name == CreateRoleInput.Module && m.IsActive);
+        
+        if (moduleEntity == null)
         {
              ModelState.AddModelError("", $"Module '{CreateRoleInput.Module}' is not a valid registered module.");
              await OnGetAsync();
@@ -115,7 +116,8 @@ public class IndexModel : PageModel
         {
             Name = CreateRoleInput.Name,
             Description = CreateRoleInput.Description,
-            Module = CreateRoleInput.Module
+            Module = CreateRoleInput.Module,
+            ModuleId = moduleEntity.Id
         };
 
         var result = await _roleManager.CreateAsync(role);

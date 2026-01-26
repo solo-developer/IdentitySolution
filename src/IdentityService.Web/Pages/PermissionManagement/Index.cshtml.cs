@@ -35,27 +35,12 @@ public class IndexModel : PageModel
         StatusFilter = status;
 
         // Get all available modules
-        // Get available modules from Consul + DB
-        var services = await _consulClient.Catalog.Services();
-        var consulModules = new List<string>();
-
-        if (services?.Response != null)
-        {
-            consulModules = services.Response.Keys
-                .Where(k => !string.Equals(k, "consul", StringComparison.OrdinalIgnoreCase) && 
-                            !string.Equals(k, "IdentityService", StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
-
-        var dbModules = await _context.Permissions
-            .Select(p => p.Module)
-            .Distinct()
-            .ToListAsync();
-
-        AvailableModules = consulModules.Union(dbModules)
-            .Distinct()
+        // Get available modules from DB
+        AvailableModules = await _context.Modules
+            .Where(m => m.IsActive)
+            .Select(m => m.Name)
             .OrderBy(m => m)
-            .ToList();
+            .ToListAsync();
 
         // Query permissions
         var query = _context.Permissions.AsQueryable();
@@ -93,21 +78,14 @@ public class IndexModel : PageModel
         if (!ModelState.IsValid) return Page();
 
         // Validate Module Exists
-        var services = await _consulClient.Catalog.Services();
-        var knownModules = new List<string>();
+        // Validate Module Exists
+        var moduleEntity = await _context.Modules.FirstOrDefaultAsync(m => m.Name == request.Module && m.IsActive);
         
-        if (services?.Response != null)
+        if (moduleEntity == null)
         {
-            knownModules = services.Response.Keys.ToList();
-        }
-        var dbModules = await _context.Permissions.Select(p => p.Module).Distinct().ToListAsync();
-        
-        if (!knownModules.Contains(request.Module, StringComparer.OrdinalIgnoreCase) && 
-            !dbModules.Contains(request.Module, StringComparer.OrdinalIgnoreCase))
-        {
-             ModelState.AddModelError("Module", $"Module '{request.Module}' is not a valid registered module.");
+             ModelState.AddModelError("Module", $"Module '{request.Module}' is not a valid active module.");
              // Refresh available modules for re-redisplay
-             AvailableModules = knownModules.Union(dbModules).Distinct().OrderBy(m => m).ToList();
+             AvailableModules = await _context.Modules.Where(m => m.IsActive).Select(m => m.Name).OrderBy(m => m).ToListAsync();
              return Page();
         }
 
@@ -117,6 +95,7 @@ public class IndexModel : PageModel
             Name = request.Name,
             Description = request.Description,
             Module = request.Module,
+            ModuleId = moduleEntity.Id,
             IsActive = true
         };
 

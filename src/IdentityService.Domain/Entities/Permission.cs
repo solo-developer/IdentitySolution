@@ -11,5 +11,8 @@ public class Permission
     public string Module { get; set; } = string.Empty; // e.g., "UserManagement", "RoleManagement"
     public bool IsActive { get; set; } = true;
     
+    public Guid? ModuleId { get; set; }
+    public virtual Module ModuleEntity { get; set; }
+
     public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
 }

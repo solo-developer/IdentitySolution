@@ -65,6 +65,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 Log.Information("Registering Consul Services...");
 builder.Services.AddConsulConfig(builder.Configuration);
 builder.Services.AddScoped<IConsulService, ConsulService>();
+builder.Services.AddHostedService<ModuleSyncWorker>();
 Log.Information("Consul Services registration completed.");
 
 builder.Services.AddControllersWithViews();
