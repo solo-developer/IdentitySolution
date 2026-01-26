@@ -1,17 +1,20 @@
-@{
-    Layout = null;
-}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Identity Service</title>
+    <title>@ViewData["Title"] - Identity Admin</title>
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap (Optional - if your views rely on grid, otherwise can rely on CSS Grid in site.css) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Apps Styles -->
     <link rel="stylesheet" href="~/css/site.css" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -20,34 +23,48 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <span>🛡️ Identity Admin</span>
+                <i class="bi bi-shield-lock-fill" style="margin-right: 0.5rem; color: var(--primary);"></i>
+                <span>Identity Admin</span>
             </div>
-            <nav>
+            
+            <nav class="sidebar-nav">
                 <a href="/" class="nav-link @(Context.Request.Path == "/" ? "active" : "")">
-                    📊 Dashboard
+                    <i class="bi bi-speedometer2"></i> Dashboard
                 </a>
+                
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; margin: 1.5rem 1.5rem 0.5rem; font-weight: 600;">
+                    Access Control
+                </div>
+                
                 <a href="/UserManagement/Users" class="nav-link @(Context.Request.Path.StartsWithSegments("/UserManagement/Users") ? "active" : "")">
-                    👥 Users
+                    <i class="bi bi-people"></i> Users
                 </a>
                 <a href="/UserManagement/Roles" class="nav-link @(Context.Request.Path.StartsWithSegments("/UserManagement/Roles") ? "active" : "")">
-                    🔑 Roles & Modules
+                    <i class="bi bi-key"></i> Roles
                 </a>
                 <a href="/PermissionManagement" class="nav-link @(Context.Request.Path.StartsWithSegments("/PermissionManagement") ? "active" : "")">
-                    🛡️ Permissions
+                    <i class="bi bi-check2-square"></i> Permissions
                 </a>
-                <a href="/RolePermissionMapping" class="nav-link @(Context.Request.Path.StartsWithSegments("/RolePermissionMapping") ? "active" : "")">
-                    🔗 Role Permissions
+                 <a href="/RolePermissionMapping" class="nav-link @(Context.Request.Path.StartsWithSegments("/RolePermissionMapping") ? "active" : "")">
+                    <i class="bi bi-diagram-2"></i> Mapping
                 </a>
+
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; margin: 1.5rem 1.5rem 0.5rem; font-weight: 600;">
+                     System
+                </div>
+                
                 <a href="/ModuleManagement" class="nav-link @(Context.Request.Path.StartsWithSegments("/ModuleManagement") ? "active" : "")">
-                    🌐 Modules
+                    <i class="bi bi-grid-3x3-gap"></i> Modules
                 </a>
-                <hr style="border-color: #374151; margin: 1rem 0;" />
+            </nav>
+            
+            <div class="sidebar-footer">
                 <form method="post" action="/Account/Logout">
-                    <button type="submit" class="nav-link" style="background:none; border:none; width:100%; text-align:left; cursor:pointer;">
-                        🚪 Logout
+                    <button type="submit" class="nav-link" style="width: 100%; border: none; background: rgba(255,255,255,0.05); border-radius: 6px; justify-content: center;">
+                        <i class="bi bi-box-arrow-right"></i> Sign Out
                     </button>
                 </form>
-            </nav>
+            </div>
         </aside>
 
         <!-- Main Content -->
@@ -56,6 +73,7 @@
         </main>
     </div>
     
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
