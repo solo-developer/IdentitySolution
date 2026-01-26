@@ -55,6 +55,21 @@ public class DatabaseInitializer
 
     private async Task SeedRolesAndPermissionsAsync()
     {
+        // 0. Seed IdentityService Module
+        var identityModule = await _context.Modules.FirstOrDefaultAsync(m => m.Name == "IdentityService");
+        if (identityModule == null)
+        {
+            identityModule = new Module
+            {
+                Name = "IdentityService",
+                Description = "Core Identity and Access Management Service",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Modules.Add(identityModule);
+            await _context.SaveChangesAsync();
+        }
+
         // Add Permissions using reflection to get all constants
         var allPermissions = typeof(Permissions)
             .GetNestedTypes()
@@ -73,6 +88,7 @@ public class DatabaseInitializer
                     Id = Guid.NewGuid(),
                     Name = pName!, 
                     Module = pName!.Split('.')[1],
+                    ModuleId = identityModule.Id,
                     Description = $"Permission for {pName}"
                 });
             }
@@ -82,7 +98,13 @@ public class DatabaseInitializer
         // Create Admin Role
         if (!await _roleManager.RoleExistsAsync(Roles.Administrator))
         {
-            var adminRole = new ApplicationRole { Name = Roles.Administrator, Description = "Full access to the system", Module = "IdentityService" };
+            var adminRole = new ApplicationRole 
+            { 
+                Name = Roles.Administrator, 
+                Description = "Full access to the system", 
+                Module = "IdentityService",
+                ModuleId = identityModule.Id
+            };
             await _roleManager.CreateAsync(adminRole);
 
             // Assign all permissions to Admin

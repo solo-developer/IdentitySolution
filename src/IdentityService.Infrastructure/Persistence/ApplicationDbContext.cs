@@ -34,5 +34,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                 .WithMany(p => p.RolePermissions)
                 .HasForeignKey(d => d.PermissionId);
         });
+
+        builder.Entity<Module>(entity =>
+        {
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
     }
 }

@@ -48,7 +48,9 @@ public class ModuleSyncWorker : BackgroundService
         
         // We only care about distinct Module names
         var activeModules = services
-            .Where(s => !string.Equals(s.Name, "consul", StringComparison.OrdinalIgnoreCase)) // Skip internal consul service
+            .Where(s => !string.Equals(s.Name, "consul", StringComparison.OrdinalIgnoreCase) && 
+                        !string.Equals(s.Module, "IdentityService", StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(s.Module, "UnknownService", StringComparison.OrdinalIgnoreCase))
             .Select(s => s.Module)
             .Distinct()
             .ToList();
@@ -64,6 +66,8 @@ public class ModuleSyncWorker : BackgroundService
         {
             if (string.IsNullOrWhiteSpace(moduleName)) continue;
 
+            // Check if module exists by name (case-insensitive)
+            // Note: We are checking against the list we already fetched from DB to avoid N+1 queries
             var existing = existingModules.FirstOrDefault(m => string.Equals(m.Name, moduleName, StringComparison.OrdinalIgnoreCase));
             
             if (existing == null)

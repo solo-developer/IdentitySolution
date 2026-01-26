@@ -38,8 +38,9 @@ public class RegisterModuleConsumer : IConsumer<IRegisterModule>
         _logger.LogInformation("Processing registration for module: {ModuleName}", message.ModuleName);
 
         // 0. Get or Create Module Entity
+        // Use normalized search or case-insensitive comparison
         var moduleEntity = await _context.Modules
-            .FirstOrDefaultAsync(m => m.Name == message.ModuleName);
+            .FirstOrDefaultAsync(m => m.Name.ToLower() == message.ModuleName.ToLower());
 
         if (moduleEntity == null)
         {
