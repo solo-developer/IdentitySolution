@@ -4,210 +4,84 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1 class="display-4">User Management Dashboard</h1>
-            <p class="text-muted">Core Identity & Access Management System</p>
-        </div>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Identity & Access Management Overview</p>
     </div>
+    <div class="d-flex gap-2">
+        <a href="/UserManagement/Users/Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Add User
+        </a>
+    </div>
+</div>
 
-    <div class="row g-4">
-        <!-- Total Users Card -->
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-2">Total Users</h6>
-                            <h2 class="mb-0">@Model.TotalUsers</h2>
-                        </div>
-                        <div class="bg-primary bg-opacity-10 p-3 rounded">
-                            <i class="bi bi-people fs-2 text-primary"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <small class="text-success">
+<!-- Stats Row -->
+<div class="row g-4 mb-6">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label mb-1">Total Users</p>
+                        <h2 class="stat-value mb-2">@Model.TotalUsers</h2>
+                        <span class="badge badge-soft-success">
                             <i class="bi bi-arrow-up"></i> @Model.ActiveUsers active
-                        </small>
+                        </span>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Roles Card -->
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-2">Total Roles</h6>
-                            <h2 class="mb-0">@Model.TotalRoles</h2>
-                        </div>
-                        <div class="bg-success bg-opacity-10 p-3 rounded">
-                            <i class="bi bi-shield-check fs-2 text-success"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <small class="text-muted">
-                            Across @Model.TotalModules modules
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Permissions Card -->
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-2">Permissions</h6>
-                            <h2 class="mb-0">@Model.TotalPermissions</h2>
-                        </div>
-                        <div class="bg-warning bg-opacity-10 p-3 rounded">
-                            <i class="bi bi-key fs-2 text-warning"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <small class="text-muted">
-                            System-wide access controls
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Inactive Users Card -->
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-2">Inactive Users</h6>
-                            <h2 class="mb-0">@Model.InactiveUsers</h2>
-                        </div>
-                        <div class="bg-danger bg-opacity-10 p-3 rounded">
-                            <i class="bi bi-person-x fs-2 text-danger"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <small class="text-muted">
-                            Disabled accounts
-                        </small>
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-people-fill"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="row mt-4 g-4">
-        <!-- Quick Actions -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pt-3">
-                    <h5 class="mb-0">Quick Actions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="/UserManagement/Users/Create" class="btn btn-outline-primary">
-                            <i class="bi bi-person-plus me-2"></i>Add New User
-                        </a>
-                        <a href="/UserManagement/Roles" class="btn btn-outline-success">
-                            <i class="bi bi-shield-plus me-2"></i>Manage Roles
-                        </a>
-                        <a href="/UserManagement/Users" class="btn btn-outline-info">
-                            <i class="bi bi-people me-2"></i>View All Users
-                        </a>
+    
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label mb-1">Total Roles</p>
+                        <h2 class="stat-value mb-2">@Model.TotalRoles</h2>
+                        <span class="text-muted text-sm">Across @Model.TotalModules modules</span>
+                    </div>
+                    <div class="stat-icon" style="background-color: var(--success-soft); color: var(--success);">
+                        <i class="bi bi-shield-check"></i>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Roles by Module -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pt-3">
-                    <h5 class="mb-0">Roles by Module</h5>
-                </div>
-                <div class="card-body">
-                    @if (Model.RolesByModule.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Module</th>
-                                        <th>Roles</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var module in Model.RolesByModule)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <strong>@module.Key</strong>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-primary">@module.Value roles</span>
-                                            </td>
-                                            <td>
-                                                <a href="/UserManagement/Roles?module=@module.Key" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-eye"></i> View
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-4">
-                            <i class="bi bi-inbox fs-1 text-muted"></i>
-                            <p class="text-muted mt-2">No roles configured yet</p>
-                        </div>
-                    }
+    </div>
+    
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label mb-1">Permissions</p>
+                        <h2 class="stat-value mb-2">@Model.TotalPermissions</h2>
+                        <span class="text-muted text-sm">System-wide controls</span>
+                    </div>
+                    <div class="stat-icon" style="background-color: var(--warning-soft); color: var(--warning);">
+                        <i class="bi bi-key-fill"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 pt-3">
-                    <h5 class="mb-0">System Information</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <dl class="row mb-0">
-                                <dt class="col-sm-4">Service Name:</dt>
-                                <dd class="col-sm-8">Identity Service</dd>
-                                
-                                <dt class="col-sm-4">Version:</dt>
-                                <dd class="col-sm-8">1.0.0</dd>
-                                
-                                <dt class="col-sm-4">Environment:</dt>
-                                <dd class="col-sm-8"><span class="badge bg-info">@Model.Environment</span></dd>
-                            </dl>
-                        </div>
-                        <div class="col-md-6">
-                            <dl class="row mb-0">
-                                <dt class="col-sm-4">Event Bus:</dt>
-                                <dd class="col-sm-8">RabbitMQ (MassTransit)</dd>
-                                
-                                <dt class="col-sm-4">Auth Provider:</dt>
-                                <dd class="col-sm-8">OpenIddict</dd>
-                                
-                                <dt class="col-sm-4">API Docs:</dt>
-                                <dd class="col-sm-8"><a href="/swagger" target="_blank">Swagger UI</a></dd>
-                            </dl>
-                        </div>
+    
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label mb-1">Inactive Users</p>
+                        <h2 class="stat-value mb-2">@Model.InactiveUsers</h2>
+                        <span class="text-muted text-sm">Disabled accounts</span>
+                    </div>
+                    <div class="stat-icon" style="background-color: var(--danger-soft); color: var(--danger);">
+                        <i class="bi bi-person-x-fill"></i>
                     </div>
                 </div>
             </div>
@@ -215,6 +89,180 @@
     </div>
 </div>
 
-@section Styles {
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-}
+<!-- Main Content Row -->
+<div class="row g-4">
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center gap-3">
+                <div class="avatar avatar-primary">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-semibold">Quick Actions</h5>
+                    <p class="text-muted text-sm mb-0">Common tasks</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <a href="/UserManagement/Users/Create" class="btn btn-light text-start py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar avatar-sm avatar-primary me-3">
+                                <i class="bi bi-person-plus"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold">Add New User</div>
+                                <div class="text-muted text-xs">Create a new account</div>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="/UserManagement/Roles" class="btn btn-light text-start py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar avatar-sm avatar-success me-3">
+                                <i class="bi bi-shield-plus"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold">Manage Roles</div>
+                                <div class="text-muted text-xs">Configure access levels</div>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="/PermissionManagement" class="btn btn-light text-start py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar avatar-sm avatar-warning me-3">
+                                <i class="bi bi-key"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold">Permissions</div>
+                                <div class="text-muted text-xs">Granular access controls</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roles by Module -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar avatar-success">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-semibold">Roles by Module</h5>
+                        <p class="text-muted text-sm mb-0">Service distribution</p>
+                    </div>
+                </div>
+                <a href="/UserManagement/Roles" class="btn btn-sm btn-secondary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.RolesByModule.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Module</th>
+                                    <th>Roles</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var module in Model.RolesByModule)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="avatar avatar-sm" style="background-color: var(--info-soft); color: var(--info);">
+                                                    <i class="bi bi-box-seam"></i>
+                                                </div>
+                                                <span class="fw-medium">@module.Key</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-soft-primary">@module.Value roles</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="/UserManagement/Roles?module=@module.Key" class="btn btn-sm btn-light">
+                                                <i class="bi bi-arrow-right"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-inbox empty-state-icon"></i>
+                        <h5 class="empty-state-title">No Roles Configured</h5>
+                        <p class="empty-state-text">Start by creating roles for your service modules.</p>
+                        <a href="/UserManagement/Roles" class="btn btn-primary">
+                            <i class="bi bi-plus-lg"></i> Create Role
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Info -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex align-items-center gap-3">
+                <div class="avatar" style="background-color: var(--gray-100); color: var(--gray-600);">
+                    <i class="bi bi-info-circle"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-semibold">System Information</h5>
+                    <p class="text-muted text-sm mb-0">Service configuration</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted">Service Name</span>
+                                <span class="fw-medium">Identity Service</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted">Version</span>
+                                <span class="fw-medium">1.0.0</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-2">
+                                <span class="text-muted">Environment</span>
+                                <span class="badge badge-soft-info">@Model.Environment</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted">Event Bus</span>
+                                <span class="fw-medium">RabbitMQ (MassTransit)</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-muted">Auth Provider</span>
+                                <span class="fw-medium">OpenIddict</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-2">
+                                <span class="text-muted">API Docs</span>
+                                <a href="/swagger" target="_blank" class="text-primary fw-medium">
+                                    Swagger UI <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

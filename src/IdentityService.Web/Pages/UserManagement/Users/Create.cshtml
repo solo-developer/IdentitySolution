@@ -5,42 +5,73 @@
 }
 
 <div class="page-header">
-    <h1 class="page-title">Create New User</h1>
+    <div>
+        <h1 class="page-title">Create User</h1>
+        <p class="page-subtitle">Register a new user account</p>
+    </div>
+    <a asp-page="Index" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back to List
+    </a>
 </div>
 
-<div class="card">
-    <form method="post">
-        <div asp-validation-summary="All" class="text-danger"></div>
-        
-        <div class="form-group">
-            <label class="form-label">Full Name</label>
-            <input asp-for="Input.FullName" class="form-control" />
-            <span asp-validation-for="Input.FullName" class="text-danger"></span>
-        </div>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar avatar-lg avatar-primary">
+                        <i class="bi bi-person-plus"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-semibold">User Details</h5>
+                        <p class="text-muted text-sm mb-0">Fill in the information below</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div asp-validation-summary="All" class="alert alert-soft-danger mb-4" role="alert"></div>
+                    
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label asp-for="Input.FullName" class="form-label fw-medium">Full Name</label>
+                            <input asp-for="Input.FullName" class="form-control" placeholder="John Doe" />
+                            <span asp-validation-for="Input.FullName" class="text-danger text-sm"></span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label asp-for="Input.UserName" class="form-label fw-medium">Username</label>
+                            <input asp-for="Input.UserName" class="form-control" placeholder="johndoe" />
+                            <span asp-validation-for="Input.UserName" class="text-danger text-sm"></span>
+                        </div>
 
-        <div class="form-group">
-            <label class="form-label">Username</label>
-            <input asp-for="Input.UserName" class="form-control" />
-            <span asp-validation-for="Input.UserName" class="text-danger"></span>
-        </div>
+                        <div class="col-12">
+                            <label asp-for="Input.Email" class="form-label fw-medium">Email Address</label>
+                            <input asp-for="Input.Email" class="form-control" type="email" placeholder="john@example.com" />
+                            <span asp-validation-for="Input.Email" class="text-danger text-sm"></span>
+                        </div>
 
-        <div class="form-group">
-            <label class="form-label">Email</label>
-            <input asp-for="Input.Email" class="form-control" type="email" />
-            <span asp-validation-for="Input.Email" class="text-danger"></span>
-        </div>
+                        <div class="col-12">
+                            <label asp-for="Input.Password" class="form-label fw-medium">Password</label>
+                            <input asp-for="Input.Password" class="form-control" type="password" placeholder="Enter a strong password" />
+                            <span asp-validation-for="Input.Password" class="text-danger text-sm"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Password must be at least 6 characters with mixed character types.
+                            </div>
+                        </div>
+                    </div>
 
-        <div class="form-group">
-            <label class="form-label">Password</label>
-            <input asp-for="Input.Password" class="form-control" type="password" />
-            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    <div class="d-flex justify-content-end gap-3 mt-5 pt-4 border-top">
+                        <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-lg"></i> Create Account
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <div style="margin-top: 1.5rem;">
-            <button type="submit" class="btn btn-primary">Create User</button>
-            <a asp-page="Index" class="btn btn-secondary" style="margin-left: 0.5rem;">Cancel</a>
-        </div>
-    </form>
+    </div>
 </div>
 
 @section Scripts {
