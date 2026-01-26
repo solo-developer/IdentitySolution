@@ -419,3 +419,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+/src/IdentityService.Web/appsettings.Development.json
+/src/UiService.Web/appsettings.Development.json
+/src/UiServiceTwo.Web/appsettings.Development.json
