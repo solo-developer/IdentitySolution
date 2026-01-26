@@ -34,7 +34,7 @@ public static class ConsulExtensions
 
         var registration = new AgentServiceRegistration()
         {
-            ID = Guid.NewGuid().ToString(),
+            ID = $"{serviceName}-{servicePort}",
             Name = serviceName,
             Address = "localhost",
             Port = servicePort,
