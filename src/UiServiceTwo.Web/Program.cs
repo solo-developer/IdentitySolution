@@ -4,9 +4,18 @@ using Microsoft.AspNetCore.DataProtection;
 using MassTransit;
 using MassTransit;
 using IdentitySolution.ServiceDiscovery;
+using Serilog;
 using UiServiceTwo.Web.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/ui-service-two-.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Static Key Storage in File System
 var keysFolder = Path.Combine(AppContext.BaseDirectory, "Keys");
@@ -29,6 +38,11 @@ builder.Services.AddAuthentication(options =>
 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
     options.Cookie.Name = "UiServiceTwo_SSO";
+    var cookieDomain = builder.Configuration["CookieDomain"];
+    if (!string.IsNullOrEmpty(cookieDomain))
+    {
+        options.Cookie.Domain = cookieDomain;
+    }
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.SameSite = SameSiteMode.None;
@@ -103,7 +117,31 @@ builder.Services.AddSingleton<UiServiceTwo.Web.Services.IGlobalSessionStore, UiS
 
 builder.Services.AddSignalR();
 
+// Register Status
+builder.Services.AddSingleton<UiServiceTwo.Web.Services.StartupStatus>();
+
 var app = builder.Build();
+
+// Startup Blocker Middleware
+app.Use(async (context, next) =>
+{
+    var status = context.RequestServices.GetService<UiServiceTwo.Web.Services.StartupStatus>();
+    if (status != null && !status.IsReady && !context.Request.Path.Value.StartsWith("/health"))
+    {
+        context.Response.StatusCode = 503;
+        context.Response.ContentType = "text/html";
+        await context.Response.WriteAsync(@"
+            <html>
+            <head><meta http-equiv='refresh' content='3'></head>
+            <body>
+                <h1>Service initializing...</h1>
+                <p>Waiting for Identity Service to become available. This page will refresh automatically.</p>
+            </body>
+            </html>");
+        return;
+    }
+    await next();
+});
 
 app.UseConsul();
 
@@ -129,7 +167,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Block startup until Identity Service is reachable via Consul
-await app.WaitForIdentityServiceAsync();
+// Start background wait
+app.StartWaitForIdentityServiceInBackground();
 
 app.Run();

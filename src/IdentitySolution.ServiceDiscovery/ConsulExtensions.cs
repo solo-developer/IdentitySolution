@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace IdentitySolution.ServiceDiscovery;
 
@@ -47,21 +48,35 @@ public static class ConsulExtensions
             }
         };
 
-        try
+        lifetime.ApplicationStarted.Register(() =>
         {
-            logger.LogInformation("Registering {ServiceName} on port {ServicePort} with Consul", serviceName, servicePort);
-            consulClient.Agent.ServiceRegister(registration).Wait();
+            // Run registration in background to avoid blocking startup
+            Task.Run(async () =>
+            {
+                try
+                {
+                    logger.LogInformation("Registering {ServiceName} on port {ServicePort} with Consul", serviceName, servicePort);
+                    await consulClient.Agent.ServiceRegister(registration);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning($"Could not register with Consul: {ex.Message}. Continuing without service discovery.");
+                }
+            });
+        });
 
-            lifetime.ApplicationStopping.Register(() =>
+        lifetime.ApplicationStopping.Register(() =>
+        {
+            try
             {
                 logger.LogInformation("Unregistering from Consul");
                 consulClient.Agent.ServiceDeregister(registration.ID).Wait();
-            });
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning($"Could not register with Consul: {ex.Message}. Continuing without service discovery.");
-        }
+            }
+            catch (Exception ex)
+            {
+                 logger.LogWarning($"Could not unregister from Consul: {ex.Message}");
+            }
+        });
 
         return app;
     }

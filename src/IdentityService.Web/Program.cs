@@ -7,7 +7,17 @@ using Microsoft.Extensions.Hosting;
 using IdentitySolution.ServiceDiscovery;
 using Microsoft.AspNetCore.DataProtection;
 
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/identity-service-.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // ==============================================================================================
 // WARNING: STATIC KEY STORAGE IN FILE SYSTEM
@@ -28,12 +38,20 @@ builder.Services.AddDataProtection()
     .SetApplicationName("IdentitySolution");
 
 // Add services to the container.
+Log.Information("Registering Infrastructure (RabbitMQ, Database)...");
 builder.Services.AddInfrastructure(builder.Configuration);
+Log.Information("Infrastructure registration completed.");
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.Name = "Idsrv_SSO";
     options.Cookie.Path = "/";
+    // Set domain to allow sharing across subdomains
+    var cookieDomain = builder.Configuration["CookieDomain"];
+    if (!string.IsNullOrEmpty(cookieDomain))
+    {
+        options.Cookie.Domain = cookieDomain;
+    }
     // None + Always is required for modern Chrome/Edge to send cookies across different localhost ports
     options.Cookie.SameSite = SameSiteMode.None; 
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
@@ -44,8 +62,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // Add Consul
+Log.Information("Registering Consul Services...");
 builder.Services.AddConsulConfig(builder.Configuration);
 builder.Services.AddScoped<IConsulService, ConsulService>();
+Log.Information("Consul Services registration completed.");
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
@@ -62,13 +82,24 @@ app.Logger.LogWarning("YOU MUST MANUALLY COPY the XML key files from 'Keys' fold
 app.Logger.LogWarning("If the keys do not match EXACTLY, Cross-App SSO will FAIL.");
 app.Logger.LogWarning("==============================================================================================");
 
+Log.Information("Initializing Consul Middleware...");
 app.UseConsul();
+Log.Information("Consul Middleware initialized.");
 
 // Seed database
-using (var scope = app.Services.CreateScope())
+try 
 {
-    var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
-    await initializer.SeedAsync();
+    Log.Information("Starting database seeding...");
+    using (var scope = app.Services.CreateScope())
+    {
+        var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+        await initializer.SeedAsync();
+    }
+    Log.Information("Database seeding completed successfully.");
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "CRITICAL: An error occurred while seeding the database. The application may not function correctly.");
 }
 
 // Configure the HTTP request pipeline.
@@ -100,4 +131,5 @@ app.MapRazorPages();
 app.MapHealthChecks("/health");
 
 
+Log.Information("Application pipeline configured. Starting web host...");
 app.Run();

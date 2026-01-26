@@ -57,9 +57,14 @@ public static class DependencyInjection
                        .RequireProofKeyForCodeExchange(); // PKCE
 
                 // Encryption and signing credentials
-                // In production, use X.509 certificates
-                options.AddDevelopmentEncryptionCertificate()
-                       .AddDevelopmentSigningCertificate();
+                // In production, use X.509 certificates loaded from file or store
+                // options.AddDevelopmentEncryptionCertificate()
+                //        .AddDevelopmentSigningCertificate();
+                
+                // USE EPHEMERAL KEYS TO FIX IIS 'ACCESS DENIED' ERROR
+                // Note: This means tokens are invalidated on application restart.
+                options.AddEphemeralEncryptionKey()
+                       .AddEphemeralSigningKey();
 
                 // Register ASP.NET Core host
                 options.UseAspNetCore()

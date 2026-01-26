@@ -37,10 +37,15 @@ public class IndexModel : PageModel
         // Get all available modules
         // Get available modules from Consul + DB
         var services = await _consulClient.Catalog.Services();
-        var consulModules = services.Response.Keys
-            .Where(k => !string.Equals(k, "consul", StringComparison.OrdinalIgnoreCase) && 
-                        !string.Equals(k, "IdentityService", StringComparison.OrdinalIgnoreCase))
-            .ToList();
+        var consulModules = new List<string>();
+
+        if (services?.Response != null)
+        {
+            consulModules = services.Response.Keys
+                .Where(k => !string.Equals(k, "consul", StringComparison.OrdinalIgnoreCase) && 
+                            !string.Equals(k, "IdentityService", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
 
         var dbModules = await _context.Permissions
             .Select(p => p.Module)
@@ -89,7 +94,12 @@ public class IndexModel : PageModel
 
         // Validate Module Exists
         var services = await _consulClient.Catalog.Services();
-        var knownModules = services.Response.Keys.ToList();
+        var knownModules = new List<string>();
+        
+        if (services?.Response != null)
+        {
+            knownModules = services.Response.Keys.ToList();
+        }
         var dbModules = await _context.Permissions.Select(p => p.Module).Distinct().ToListAsync();
         
         if (!knownModules.Contains(request.Module, StringComparer.OrdinalIgnoreCase) && 
