@@ -6,10 +6,21 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using IdentitySolution.ServiceDiscovery;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure ForwardedHeaders for reverse proxy support
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    // Clear the default networks/proxies to allow forwarded headers from any source
+    // In production, you should restrict this to known proxy IPs
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -77,6 +88,10 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// IMPORTANT: UseForwardedHeaders must be called before other middlewares
+// to ensure correct scheme/host detection behind reverse proxy
+app.UseForwardedHeaders();
+
 app.Logger.LogWarning("==============================================================================================");
 app.Logger.LogWarning("WARNING: STATIC KEY STORAGE IN FILE SYSTEM");
 app.Logger.LogWarning("YOU MUST MANUALLY COPY the XML key files from 'Keys' folder to all other machines.");
@@ -108,17 +123,25 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    
+    // Debug Middleware to see what cookies are coming in (development only)
+    app.Use(async (context, next) =>
+    {
+        var cookies = string.Join("; ", context.Request.Cookies.Select(c => $"{c.Key}={c.Value.Substring(0, Math.Min(10, c.Value.Length))}..."));
+        Console.WriteLine($"[DEBUG-CORE] Request: {context.Request.Path} | Cookies: {(string.IsNullOrEmpty(cookies) ? "NONE" : cookies)}");
+        await next();
+    });
+    
+    // Only use HTTPS redirection in development
+    // In production behind a reverse proxy, the proxy handles SSL termination
+    app.UseHttpsRedirection();
+}
+else
+{
+    app.UseExceptionHandler("/Account/Error");
+    app.UseHsts();
 }
 
-// Debug Middleware to see what cookies are coming in
-app.Use(async (context, next) =>
-{
-    var cookies = string.Join("; ", context.Request.Cookies.Select(c => $"{c.Key}={c.Value.Substring(0, Math.Min(10, c.Value.Length))}..."));
-    Console.WriteLine($"[DEBUG-CORE] Request: {context.Request.Path} | Cookies: {(string.IsNullOrEmpty(cookies) ? "NONE" : cookies)}");
-    await next();
-});
-
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();

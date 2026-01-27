@@ -1,13 +1,21 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.DataProtection;
-using MassTransit;
+using Microsoft.AspNetCore.HttpOverrides;
 using MassTransit;
 using IdentitySolution.ServiceDiscovery;
 using Serilog;
 using UiServiceTwo.Web.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure ForwardedHeaders for reverse proxy support
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -57,6 +65,7 @@ builder.Services.AddAuthentication(options =>
 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
     options.Cookie.Name = "UiServiceTwo_SSO";
+    options.Cookie.Path = "/";
     var cookieDomain = builder.Configuration["CookieDomain"];
     if (!string.IsNullOrEmpty(cookieDomain))
     {
@@ -68,7 +77,9 @@ builder.Services.AddAuthentication(options =>
 })
 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
 {
-    options.Authority = identityAuthority ?? "https://localhost:7242";
+    // Priority: 1. Consul discovery, 2. Config fallback, 3. localhost default
+    var configuredAuthority = builder.Configuration["IdentityServer:Authority"];
+    options.Authority = identityAuthority ?? configuredAuthority ?? "https://localhost:7242";
     options.ClientId = builder.Configuration["IdentityClient:ClientId"] ?? "ui-client-2";
     options.ClientSecret = builder.Configuration["IdentityClient:ClientSecret"] ?? "ui-secret-2";
     options.ResponseType = "code";
@@ -141,6 +152,10 @@ builder.Services.AddSingleton<UiServiceTwo.Web.Services.StartupStatus>();
 
 var app = builder.Build();
 
+// IMPORTANT: UseForwardedHeaders must be called before other middlewares
+// to ensure correct scheme/host detection behind reverse proxy
+app.UseForwardedHeaders();
+
 // Startup Blocker Middleware
 app.Use(async (context, next) =>
 {
@@ -172,8 +187,12 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
-
-app.UseHttpsRedirection();
+else
+{
+    // Only use HTTPS redirection in development
+    // In production behind a reverse proxy, the proxy handles SSL termination
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
