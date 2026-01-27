@@ -1,9 +1,6 @@
 using IdentityService.Infrastructure;
 using IdentityService.Infrastructure.Persistence;
 using IdentityService.Web.Services;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using IdentitySolution.ServiceDiscovery;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;

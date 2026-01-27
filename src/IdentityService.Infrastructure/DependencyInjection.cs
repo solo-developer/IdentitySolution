@@ -1,5 +1,3 @@
-using System.IO;
-using Microsoft.AspNetCore.DataProtection;
 using IdentityService.Application.Interfaces;
 using IdentityService.Domain.Entities;
 using IdentityService.Infrastructure.Persistence;
@@ -7,11 +5,9 @@ using IdentityService.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MassTransit;
-using IdentitySolution.Shared.Events;
 using IdentitySolution.ServiceDiscovery;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Http;
 
 namespace IdentityService.Infrastructure;
 
