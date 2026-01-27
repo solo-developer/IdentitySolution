@@ -29,7 +29,26 @@ builder.Services.AddDataProtection()
 builder.Services.AddControllersWithViews();
 builder.Services.AddHealthChecks();
 
+
 // Configure OIDC Authentication with Cookie storage
+string identityAuthority = null;
+try
+{
+    identityAuthority = await IdentitySolution.ServiceDiscovery.ServiceDiscoveryHelper.GetServiceAddressAsync(builder.Configuration, "IdentityService");
+    if (!string.IsNullOrEmpty(identityAuthority))
+    {
+        Log.Information($"Resolved IdentityService Authority from Consul: {identityAuthority}");
+    }
+    else
+    {
+        Log.Warning("Could not resolve IdentityService from Consul. Authority will default to localhost.");
+    }
+}
+catch (Exception ex)
+{
+    Log.Warning($"Failed to resolve IdentityService from Consul during startup: {ex.Message}. Authority will default to localhost.");
+}
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -49,7 +68,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
 {
-    options.Authority = builder.Configuration["IdentityService:Authority"] ?? "https://localhost:7242";
+    options.Authority = identityAuthority ?? "https://localhost:7242";
     options.ClientId = builder.Configuration["IdentityClient:ClientId"] ?? "ui-client-2";
     options.ClientSecret = builder.Configuration["IdentityClient:ClientSecret"] ?? "ui-secret-2";
     options.ResponseType = "code";

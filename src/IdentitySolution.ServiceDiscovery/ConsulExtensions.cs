@@ -31,12 +31,13 @@ public static class ConsulExtensions
         var serviceName = config["Consul:ServiceName"] ?? "UnknownService";
         var servicePort = int.Parse(config["Consul:ServicePort"] ?? "7200");
         var baseUrl = config["IdentityClient:BaseUrl"] ?? $"https://localhost:{servicePort}";
+        var host = new Uri(baseUrl).Host;
 
         var registration = new AgentServiceRegistration()
         {
             ID = $"{serviceName}-{servicePort}",
             Name = serviceName,
-            Address = "localhost",
+            Address = host,
             Port = servicePort,
             Check = new AgentServiceCheck()
             {

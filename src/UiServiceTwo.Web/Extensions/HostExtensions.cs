@@ -34,15 +34,9 @@ public static class HostExtensions
 
                  while (!resolved && (DateTime.UtcNow - startedAt) < maxRetryTime)
                  {
-                     // 1. Try Configured Authority URL (Priority for overriding)
-                     var authority = configuration["IdentityService:Authority"];
-                     if (!string.IsNullOrEmpty(authority) && Uri.TryCreate(authority, UriKind.Absolute, out var uri))
-                     {
-                         host = uri.Host;
-                         port = uri.Port > 0 ? uri.Port : (uri.Scheme == "https" ? 443 : 80);
-                         logger.LogInformation($"Resolved IdentityService from Config: {host}:{port}");
-                         resolved = true;
-                     }
+                     // 1. Try Service Discovery (Consul)
+                     // Configuration override removed as per requirements - strictly using Consul resolution.
+
                      
                      // 2. Try Service Discovery (Consul) if config didn't give a result OR we want to verify it
                      if (!resolved)
