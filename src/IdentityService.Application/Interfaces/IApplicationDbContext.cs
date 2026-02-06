@@ -10,6 +10,7 @@ public interface IApplicationDbContext
     DbSet<Permission> Permissions { get; }
     DbSet<RolePermission> RolePermissions { get; }
     DbSet<Module> Modules { get; }
+    DbSet<LdapConfiguration> LdapConfigurations { get; }
     
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

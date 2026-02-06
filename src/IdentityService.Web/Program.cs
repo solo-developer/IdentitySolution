@@ -76,6 +76,10 @@ builder.Services.AddScoped<IConsulService, ConsulService>();
 builder.Services.AddHostedService<ModuleSyncWorker>();
 Log.Information("Consul Services registration completed.");
 
+// LDAP Configuration
+// builder.Services.Configure<IdentityService.Web.Configurations.LdapSettings>(builder.Configuration.GetSection("Ldap"));
+builder.Services.AddScoped<IdentityService.Application.Interfaces.ILdapService, IdentityService.Web.Services.LdapService>();
+
 builder.Services.AddControllersWithViews();
 // builder.Services.AddRazorPages();
 builder.Services.AddHealthChecks()

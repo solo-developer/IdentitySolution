@@ -1,0 +1,113 @@
+@model IdentityService.Web.ViewModels.LdapSyncViewModel
+@{
+    ViewData["Title"] = "LDAP Sync";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">LDAP Synchronization</h1>
+        <p class="page-subtitle">Import users from Active Directory</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Configure" class="btn btn-outline-secondary">
+            <i class="bi bi-gear-fill me-1"></i> Configure
+        </a>
+        <a asp-controller="Users" asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Users
+        </a>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    var isError = Model.Message.Contains("Error") || Model.Message.Contains("failed");
+    <div class="alert @(isError ? "alert-danger" : "alert-success") mb-4" role="alert">
+        @if (isError) { <i class="bi bi-exclamation-triangle-fill me-2"></i> }
+        else { <i class="bi bi-check-circle-fill me-2"></i> }
+        @Model.Message
+    </div>
+}
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title fw-bold mb-3">Sync Status</h5>
+                 <div class="d-flex align-items-center mb-3">
+                    <div class="avatar avatar-primary me-3">
+                        <i class="bi bi-cloud-arrow-down-fill"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-muted text-uppercase fw-semibold">Total Found</div>
+                        <div class="fs-4 fw-bold">@Model.Users.Count</div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between text-sm text-muted mb-4">
+                    <span>New: <strong class="text-success">@Model.NewUsersCount</strong></span>
+                    <span>Existing: <strong>@Model.ExistingUsersCount</strong></span>
+                </div>
+                
+                <form method="post" asp-action="Sync">
+                    <button type="submit" class="btn btn-primary w-100" @(Model.Users.Count == 0 ? "disabled" : "")>
+                        <i class="bi bi-arrow-repeat me-2"></i> Sync Now
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card h-100">
+             <div class="card-header">
+                <h5 class="mb-0 fw-semibold">Preview Users</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover mb-0">
+                         <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Users.Any())
+                            {
+                                foreach (var user in Model.Users)
+                                {
+                                    <tr>
+                                        <td class="fw-medium">@user.UserName</td>
+                                        <td>@user.Email</td>
+                                        <td>
+                                            @if (user.Status == "New" || user.Status == "Created")
+                                            {
+                                                <span class="badge bg-soft-success text-success">@user.Status</span>
+                                            }
+                                            else if (user.Status.Contains("Error"))
+                                            {
+                                                <span class="badge bg-soft-danger text-danger">@user.Status</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-light text-muted">@user.Status</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted">
+                                        No users found in LDAP or connection not configured.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

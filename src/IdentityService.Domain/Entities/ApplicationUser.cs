@@ -6,4 +6,8 @@ public class ApplicationUser : IdentityUser
 {
     public string FullName { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
+    
+    // LDAP Integration
+    public bool IsLdapUser { get; set; }
+    public string? LdapDistinguishedName { get; set; }
 }

@@ -8,9 +8,14 @@
         <h1 class="page-title">Users</h1>
         <p class="page-subtitle">Manage user accounts and access permissions</p>
     </div>
-    <a asp-action="Create" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> Add User
-    </a>
+    <div class="d-flex gap-2">
+        <a asp-controller="Ldap" asp-action="Index" class="btn btn-outline-primary">
+            <i class="bi bi-cloud-arrow-down"></i> LDAP Sync
+        </a>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Add User
+        </a>
+    </div>
 </div>
 
 <div class="card border-0">
