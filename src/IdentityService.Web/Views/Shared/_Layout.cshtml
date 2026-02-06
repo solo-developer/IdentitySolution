@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Identity Admin</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap (Optional - if your views rely on grid, otherwise can rely on CSS Grid in site.css) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Apps Styles -->
+    <link rel="stylesheet" href="~/css/site.css" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="layout-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="bi bi-shield-lock-fill" style="margin-right: 0.5rem; color: var(--primary);"></i>
+                <span>Identity Admin</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a asp-controller="Home" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; margin: 1.5rem 1.5rem 0.5rem; font-weight: 600;">
+                    Access Control
+                </div>
+                
+                <a asp-controller="Users" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Users" ? "active" : "")">
+                    <i class="bi bi-people"></i> Users
+                </a>
+                <a asp-controller="Roles" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Roles" ? "active" : "")">
+                    <i class="bi bi-key"></i> Roles
+                </a>
+                <a asp-controller="Permissions" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Permissions" ? "active" : "")">
+                    <i class="bi bi-check2-square"></i> Permissions
+                </a>
+                 <a asp-controller="RolePermission" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "RolePermission" ? "active" : "")">
+                    <i class="bi bi-diagram-2"></i> Mapping
+                </a>
+
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; margin: 1.5rem 1.5rem 0.5rem; font-weight: 600;">
+                     System
+                </div>
+                
+                <a asp-controller="Modules" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Modules" ? "active" : "")">
+                    <i class="bi bi-grid-3x3-gap"></i> Modules
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <form method="post" asp-controller="Account" asp-action="Logout">
+                    <button type="submit" class="nav-link" style="width: 100%; border: none; background: rgba(255,255,255,0.05); border-radius: 6px; justify-content: center;">
+                        <i class="bi bi-box-arrow-right"></i> Sign Out
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            @RenderBody()
+        </main>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTables for any table with class 'datatable'
+            $('.datatable').DataTable({
+                "language": {
+                    "search": "",
+                    "searchPlaceholder": "Search records..."
+                },
+                "dom": '<"d-flex justify-content-between align-items-center mb-3"f>t<"d-flex justify-content-between align-items-center mt-3"ip>',
+                "pageLength": 10,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true
+            });
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

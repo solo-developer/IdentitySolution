@@ -1,0 +1,168 @@
+@model IdentityService.Web.ViewModels.ModulesViewModel
+@{
+    ViewData["Title"] = "Module Management";
+}
+
+@functions {
+    public string GetStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "passing" => "bg-success",
+            "warning" => "bg-warning",
+            "critical" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Registered Modules</h1>
+        <p class="page-subtitle">Services registered in Consul service discovery</p>
+    </div>
+    <button type="button" class="btn btn-secondary" onclick="location.reload()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+    </button>
+</div>
+
+@if (Model.Services.Any())
+{
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-6">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="stat-label mb-1">Total Services</p>
+                            <h2 class="stat-value">@Model.Services.Count</h2>
+                        </div>
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-hdd-network"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="stat-label mb-1">Healthy</p>
+                            <h2 class="stat-value" style="color: var(--success);">@Model.HealthyCount</h2>
+                        </div>
+                        <div class="stat-icon" style="background-color: var(--success-soft); color: var(--success);">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="stat-label mb-1">Warning</p>
+                            <h2 class="stat-value" style="color: var(--warning);">@Model.WarningCount</h2>
+                        </div>
+                        <div class="stat-icon" style="background-color: var(--warning-soft); color: var(--warning);">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="stat-label mb-1">Critical</p>
+                            <h2 class="stat-value" style="color: var(--danger);">@Model.CriticalCount</h2>
+                        </div>
+                        <div class="stat-icon" style="background-color: var(--danger-soft); color: var(--danger);">
+                            <i class="bi bi-x-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Services Grid -->
+    <div class="row g-4">
+        @foreach (var service in Model.Services)
+        {
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-start">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar" style="background-color: var(--info-soft); color: var(--info);">
+                                <i class="bi bi-server"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 fw-semibold">@service.Name</h5>
+                                <span class="text-muted text-sm">@service.Module</span>
+                            </div>
+                        </div>
+                        <span class="badge @GetStatusBadgeClass(service.Status)">@service.Status</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-column gap-2 text-sm">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">ID</span>
+                                <code class="text-xs">@(service.Id.Length > 12 ? service.Id.Substring(0, 12) + "..." : service.Id)</code>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Address</span>
+                                <span class="fw-medium">@service.Address:@service.Port</span>
+                            </div>
+                            @if (service.Tags.Any())
+                            {
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <span class="text-muted">Tags</span>
+                                    <div class="d-flex flex-wrap gap-1 justify-content-end">
+                                        @foreach (var tag in service.Tags.Take(3))
+                                        {
+                                            <span class="badge bg-light text-dark">@tag</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex gap-2">
+                        <a href="http://@service.Address:@service.Port/health" 
+                           target="_blank" 
+                           class="btn btn-sm btn-secondary flex-fill">
+                            <i class="bi bi-heart-pulse"></i> Health
+                        </a>
+                        <a href="http://@service.Address:@service.Port/swagger" 
+                           target="_blank" 
+                           class="btn btn-sm btn-primary flex-fill">
+                            <i class="bi bi-book"></i> API Docs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="empty-state">
+            <i class="bi bi-server empty-state-icon"></i>
+            <h5 class="empty-state-title">No Services Registered</h5>
+            <p class="empty-state-text">
+                No services are currently registered in Consul. Make sure Consul is running and services are configured to register.
+            </p>
+            <a href="http://localhost:8500" target="_blank" class="btn btn-primary">
+                <i class="bi bi-box-arrow-up-right"></i> Open Consul UI
+            </a>
+        </div>
+    </div>
+}

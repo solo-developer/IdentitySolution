@@ -77,7 +77,7 @@ builder.Services.AddHostedService<ModuleSyncWorker>();
 Log.Information("Consul Services registration completed.");
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages();
+// builder.Services.AddRazorPages();
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>();
 builder.Services.AddEndpointsApiExplorer();
@@ -148,7 +148,10 @@ app.UseAuthorization();
 
 
 app.MapControllers();
-app.MapRazorPages();
+// app.MapRazorPages();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapHealthChecks("/health");
 
 

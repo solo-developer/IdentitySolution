@@ -1,0 +1,154 @@
+@model IdentityService.Web.ViewModels.EditUserViewModel
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Edit User</h1>
+        <p class="page-subtitle">
+            Managing <span class="fw-semibold text-primary">@Model.UserName</span> &bull; @Model.Email
+        </p>
+    </div>
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Users
+    </a>
+</div>
+
+<form method="post" asp-action="Edit">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="UserName" />
+    <input type="hidden" asp-for="Email" />
+    <input type="hidden" asp-for="FullName" />
+
+    <div class="row g-4 mb-5">
+        <!-- Status Card -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar avatar-warning">
+                            <i class="bi bi-toggle-on"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-semibold">Account Status</h5>
+                            <p class="text-muted text-sm mb-0">Control user access</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="p-4 rounded-3" style="background-color: var(--gray-50);">
+                        <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                            <label class="form-check-label fw-medium" for="statusSwitch">
+                                Account Active
+                            </label>
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   role="switch" 
+                                   id="statusSwitch" 
+                                   asp-for="IsActive"
+                                   style="width: 3em; height: 1.5em;">
+                        </div>
+                    </div>
+                    <div class="mt-3 text-muted text-sm d-flex align-items-start gap-2">
+                        <i class="bi bi-info-circle mt-1"></i>
+                        <span>Disabling the account will immediately prevent the user from logging in.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Roles Card -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar avatar-primary">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-semibold">Assigned Roles</h5>
+                            <p class="text-muted text-sm mb-0">Select roles by module</p>
+                        </div>
+                    </div>
+                    <span class="badge bg-light text-dark">@Model.GroupedRoles.Count modules</span>
+                </div>
+                <div class="card-body">
+                    @if (Model.GroupedRoles.Any())
+                    {
+                        <div class="accordion" id="rolesAccordion">
+                            @foreach (var group in Model.GroupedRoles)
+                            {
+                                var groupId = "collapse" + group.Key.Replace(" ", "");
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" 
+                                                type="button" 
+                                                data-bs-toggle="collapse" 
+                                                data-bs-target="#@groupId">
+                                            <i class="bi bi-box-seam me-2 text-primary"></i>
+                                            <span class="fw-semibold">@group.Key</span>
+                                            <span class="badge bg-light text-dark ms-2">@group.Value.Count roles</span>
+                                        </button>
+                                    </h2>
+                                    <div id="@groupId" class="accordion-collapse collapse" data-bs-parent="#rolesAccordion">
+                                        <div class="accordion-body">
+                                            <div class="row g-3">
+                                                @foreach (var role in group.Value)
+                                                {
+                                                    var isChecked = Model.SelectedRoles.Contains(role.Name);
+                                                    <div class="col-sm-6">
+                                                        <div class="form-check p-3 rounded-3 transition-all @(isChecked ? "bg-primary bg-opacity-10 border border-primary border-opacity-25" : "bg-light")">
+                                                            <input type="checkbox" 
+                                                                   class="form-check-input" 
+                                                                   name="SelectedRoles" 
+                                                                   id="role_@role.Name" 
+                                                                   value="@role.Name" 
+                                                                   checked="@isChecked">
+                                                            <label class="form-check-label w-100 cursor-pointer" for="role_@role.Name">
+                                                                <div class="fw-medium">@role.Name</div>
+                                                                <div class="text-muted text-xs">@role.Description</div>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state py-5">
+                            <i class="bi bi-shield-x empty-state-icon" style="font-size: 3rem;"></i>
+                            <h5 class="empty-state-title">No Roles Available</h5>
+                            <p class="empty-state-text">Create roles first to assign them to this user.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Bar -->
+    <div class="fixed-bottom bg-white border-top py-3" style="z-index: 1000; left: 260px; box-shadow: 0 -4px 12px rgba(0,0,0,0.1);">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <span class="text-muted text-sm">
+                <i class="bi bi-clock-history me-1"></i> Changes are applied immediately upon save
+            </span>
+            <div class="d-flex gap-3">
+                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<style>
+    /* Adjust main content for floating footer */
+    .main-content { padding-bottom: 100px; }
+</style>

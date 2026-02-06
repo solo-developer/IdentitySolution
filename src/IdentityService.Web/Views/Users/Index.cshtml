@@ -1,0 +1,109 @@
+@model IdentityService.Web.ViewModels.UserIndexViewModel
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Users</h1>
+        <p class="page-subtitle">Manage user accounts and access permissions</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Add User
+    </a>
+</div>
+
+<div class="card border-0">
+    <div class="card-body p-0">
+        @if (Model.Users.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 datatable">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role Access</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar avatar-primary">
+                                            @user.FullName.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">@user.FullName</div>
+                                            <div class="text-muted text-sm">@user.Email</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (user.Roles != null && user.Roles.Any())
+                                    {
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach (var role in user.Roles.Take(3))
+                                            {
+                                                <span class="badge badge-soft-primary">@role</span>
+                                            }
+                                            @if (user.Roles.Count() > 3)
+                                            {
+                                                <span class="badge bg-light text-muted">+@(user.Roles.Count() - 3)</span>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted text-sm fst-italic">No roles assigned</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.IsActive)
+                                    {
+                                        <span class="status-pill active">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-pill inactive">Inactive</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a asp-action="Edit" asp-route-id="@user.Id" 
+                                           class="btn btn-icon btn-light" 
+                                           title="Edit User">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        @* Delete Not Implemented in Controller yet *@
+                                        @* 
+                                        <button type="button" 
+                                                class="btn btn-icon btn-light text-danger" 
+                                                title="Delete User">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        *@
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="bi bi-people empty-state-icon"></i>
+                <h5 class="empty-state-title">No Users Found</h5>
+                <p class="empty-state-text">Get started by creating your first user account.</p>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Create User
+                </a>
+            </div>
+        }
+    </div>
+</div>
