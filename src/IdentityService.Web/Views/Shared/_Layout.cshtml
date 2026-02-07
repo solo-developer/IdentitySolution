@@ -95,9 +95,11 @@
                         <div class="truncate" style="color: white; font-weight: 500;">@userName</div>
                         <div class="text-xs">Administrator</div>
                     </div>
-                    <a asp-controller="Account" asp-action="Logout" class="btn-ghost" style="color: var(--gray-400); padding: 4px;" title="Sign out">
-                        <i class="bi bi-box-arrow-right"></i>
-                    </a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                        <button type="submit" class="btn-ghost" style="color: var(--gray-400); padding: 4px; border: none; background: none; cursor: pointer;" title="Sign out">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
         </aside>
