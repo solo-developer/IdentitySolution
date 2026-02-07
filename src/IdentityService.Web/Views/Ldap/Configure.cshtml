@@ -5,75 +5,173 @@
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Configure LDAP</h1>
+        <a asp-action="Index" class="text-muted text-sm d-inline-flex align-items-center gap-1 mb-2 text-decoration-none">
+            <i class="bi bi-arrow-left"></i> Back to LDAP Sync
+        </a>
+        <h1 class="page-title">
+            <i class="bi bi-gear text-primary me-2"></i>
+            Configure LDAP
+        </h1>
         <p class="page-subtitle">Setup connection to Active Directory</p>
     </div>
-    <a asp-action="Index" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> Back to Sync
-    </a>
 </div>
 
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-8 col-xl-7">
         <div class="card">
-            <div class="card-body">
+            <div class="card-header" style="background: linear-gradient(135deg, var(--primary-soft) 0%, white 100%);">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar avatar-xl avatar-primary">
+                        <i class="bi bi-diagram-2 fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-semibold">LDAP Connection Settings</h5>
+                        <p class="text-muted text-sm mb-0">Configure your Active Directory connection</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-5">
                 <form method="post">
                     <div asp-validation-summary="All" class="alert alert-soft-danger mb-4" role="alert"></div>
                     
-                    <div class="row g-4">
-                        <div class="col-md-8">
-                            <label asp-for="Host" class="form-label fw-medium">LDAP Host</label>
-                            <input asp-for="Host" class="form-control" placeholder="ldap.example.com" />
-                            <span asp-validation-for="Host" class="text-danger text-sm"></span>
-                        </div>
+                    <!-- Connection Section -->
+                    <div class="mb-5">
+                        <h6 class="fw-semibold text-uppercase text-muted letter-spacing-1 mb-4">
+                            <i class="bi bi-hdd-network me-2"></i>Connection
+                        </h6>
                         
-                        <div class="col-md-4">
-                            <label asp-for="Port" class="form-label fw-medium">Port</label>
-                            <input asp-for="Port" class="form-control" placeholder="389" />
-                            <span asp-validation-for="Port" class="text-danger text-sm"></span>
-                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-8">
+                                <label asp-for="Host" class="form-label fw-medium">
+                                    <i class="bi bi-server me-1 text-muted"></i>LDAP Host
+                                </label>
+                                <input asp-for="Host" class="form-control form-control-lg" placeholder="ldap.example.com" />
+                                <span asp-validation-for="Host" class="text-danger text-sm"></span>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label asp-for="Port" class="form-label fw-medium">
+                                    <i class="bi bi-hash me-1 text-muted"></i>Port
+                                </label>
+                                <input asp-for="Port" class="form-control form-control-lg" placeholder="389" />
+                                <span asp-validation-for="Port" class="text-danger text-sm"></span>
+                            </div>
 
-                        <div class="col-12">
-                            <label asp-for="BaseDn" class="form-label fw-medium">Base DN</label>
-                            <input asp-for="BaseDn" class="form-control" placeholder="DC=example,DC=com" />
-                            <span asp-validation-for="BaseDn" class="text-danger text-sm"></span>
-                            <div class="form-text">The root node to search for users.</div>
-                        </div>
-
-                        <div class="col-12">
-                            <label asp-for="AdminDn" class="form-label fw-medium">Admin DN / Service Account</label>
-                            <input asp-for="AdminDn" class="form-control" placeholder="CN=ServiceAccount,CN=Users,DC=example,DC=com" />
-                            <span asp-validation-for="AdminDn" class="text-danger text-sm"></span>
-                            <div class="form-text">Distinguished Name of the account used to query LDAP.</div>
-                        </div>
-
-                        <div class="col-12">
-                            <label asp-for="AdminPassword" class="form-label fw-medium">Password</label>
-                            <input asp-for="AdminPassword" class="form-control" type="password" value="@Model.AdminPassword" />
-                            <span asp-validation-for="AdminPassword" class="text-danger text-sm"></span>
-                        </div>
-                        
-                        <div class="col-12">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" asp-for="UseSsl">
-                                <label class="form-check-label" asp-for="UseSsl">Use SSL (LDAPS)</label>
+                            <div class="col-12">
+                                <label asp-for="BaseDn" class="form-label fw-medium">
+                                    <i class="bi bi-diagram-3 me-1 text-muted"></i>Base DN
+                                </label>
+                                <input asp-for="BaseDn" class="form-control form-control-lg" placeholder="DC=example,DC=com" />
+                                <span asp-validation-for="BaseDn" class="text-danger text-sm"></span>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>The root node to search for users
+                                </div>
                             </div>
                         </div>
+                    </div>
+                    
+                    <!-- Authentication Section -->
+                    <div class="mb-5">
+                        <h6 class="fw-semibold text-uppercase text-muted letter-spacing-1 mb-4">
+                            <i class="bi bi-key me-2"></i>Authentication
+                        </h6>
+                        
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label asp-for="AdminDn" class="form-label fw-medium">
+                                    <i class="bi bi-person-badge me-1 text-muted"></i>Admin DN / Service Account
+                                </label>
+                                <input asp-for="AdminDn" class="form-control form-control-lg" placeholder="CN=ServiceAccount,CN=Users,DC=example,DC=com" />
+                                <span asp-validation-for="AdminDn" class="text-danger text-sm"></span>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>Distinguished Name of the account used to query LDAP
+                                </div>
+                            </div>
 
-                        <div class="col-12">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" asp-for="IsEnabled">
-                                <label class="form-check-label" asp-for="IsEnabled">Enable Integration</label>
+                            <div class="col-12">
+                                <label asp-for="AdminPassword" class="form-label fw-medium">
+                                    <i class="bi bi-lock me-1 text-muted"></i>Password
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="AdminPassword" class="form-control form-control-lg" type="password" id="passwordInput" value="@Model.AdminPassword" />
+                                    <button class="btn btn-light" type="button" onclick="togglePassword()">
+                                        <i class="bi bi-eye" id="toggleIcon"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="AdminPassword" class="text-danger text-sm"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Options Section -->
+                    <div class="mb-5">
+                        <h6 class="fw-semibold text-uppercase text-muted letter-spacing-1 mb-4">
+                            <i class="bi bi-sliders me-2"></i>Options
+                        </h6>
+                        
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="p-4 rounded-3 d-flex justify-content-between align-items-center" style="background: var(--gray-50);">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar avatar-sm avatar-info">
+                                            <i class="bi bi-shield-lock"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">Use SSL (LDAPS)</div>
+                                            <div class="text-muted text-sm">Encrypt connection with SSL/TLS</div>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" asp-for="UseSsl" style="width: 3em; height: 1.5em;">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="p-4 rounded-3 d-flex justify-content-between align-items-center" style="background: @(Model.IsEnabled ? "var(--success-soft)" : "var(--gray-50)");">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar avatar-sm @(Model.IsEnabled ? "avatar-success" : "")" style="@(!Model.IsEnabled ? "background-color: var(--gray-200); color: var(--gray-500);" : "")">
+                                            <i class="bi @(Model.IsEnabled ? "bi-check-circle" : "bi-pause-circle")"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">Enable Integration</div>
+                                            <div class="text-muted text-sm">Allow LDAP user synchronization</div>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" asp-for="IsEnabled" style="width: 3em; height: 1.5em;">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-end gap-3 mt-5 pt-4 border-top">
+                    <div class="d-flex justify-content-between gap-3 pt-4 border-top">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-x-lg"></i> Cancel
+                        </a>
                         <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-save"></i> Save Configuration
+                            <i class="bi bi-check-lg"></i> Save Configuration
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+        
+        <!-- Help Info -->
+        <div class="card mt-4 border-0" style="background: var(--info-soft);">
+            <div class="card-body">
+                <div class="d-flex gap-3">
+                    <i class="bi bi-lightbulb text-info fs-5"></i>
+                    <div>
+                        <div class="fw-medium text-info-emphasis mb-2">Configuration Tips</div>
+                        <ul class="mb-0 ps-3 text-sm" style="color: #1e40af;">
+                            <li>Use port <strong>389</strong> for LDAP or <strong>636</strong> for LDAPS (SSL)</li>
+                            <li>The service account needs read access to query user objects</li>
+                            <li>Test the connection before enabling the integration</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -81,4 +179,18 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            const icon = document.getElementById('toggleIcon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+    </script>
 }

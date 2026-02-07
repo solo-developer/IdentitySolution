@@ -5,25 +5,34 @@
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Roles & Modules</h1>
+        <h1 class="page-title">
+            <i class="bi bi-person-badge text-primary me-2"></i>
+            Roles & Modules
+        </h1>
         <p class="page-subtitle">Define and manage role-based access for your services</p>
     </div>
+    @if (!string.IsNullOrEmpty(Model.Module))
+    {
+        <span class="badge badge-soft-primary fs-6 px-3 py-2">
+            <i class="bi bi-box-seam me-1"></i> @Model.Module
+        </span>
+    }
 </div>
 
 <!-- Module Selector -->
-<div class="card mb-5">
+<div class="card mb-6">
     <div class="card-body">
         <div class="row align-items-center">
-            <div class="col-md-6">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="avatar avatar-lg avatar-primary">
-                        <i class="bi bi-box-seam"></i>
+            <div class="col-lg-6">
+                <div class="d-flex align-items-center gap-4">
+                    <div class="avatar avatar-xl avatar-primary">
+                        <i class="bi bi-box-seam fs-4"></i>
                     </div>
                     <div class="flex-grow-1">
                         <label class="section-title mb-2">Service Module</label>
                         <select class="form-select form-select-lg" id="moduleSelector" 
                                 onchange="window.location.href='?module=' + this.value" 
-                                disabled="@(Model.IsModuleReadOnly ? "disabled" : null)">
+                                @(Model.IsModuleReadOnly ? "disabled" : "")>
                             <option value="">-- Select a Module --</option>
                             @foreach (var mod in Model.Modules)
                             {
@@ -33,24 +42,27 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-lg-6 mt-4 mt-lg-0">
                 @if (Model.IsModuleReadOnly && !string.IsNullOrEmpty(Model.Module))
                 {
                     <div class="alert alert-soft-warning mb-0 d-flex align-items-center gap-3">
                         <i class="bi bi-lock-fill fs-4"></i>
                         <div>
-                            <strong>Context Locked</strong>
-                            <div class="text-sm opacity-75">Module selection restricted by referrer</div>
+                            <strong class="d-block">Context Locked</strong>
+                            <span class="text-sm opacity-75">Module selection restricted by referrer</span>
                         </div>
                     </div>
                 }
                 else if (string.IsNullOrEmpty(Model.Module))
                 {
-                    <div class="d-flex align-items-start gap-3 text-muted">
-                        <i class="bi bi-info-circle fs-4"></i>
-                        <p class="mb-0 text-sm">
-                            Roles are scoped to specific microservices. Select a module to view or create roles for that service context.
-                        </p>
+                    <div class="d-flex align-items-start gap-3 p-4 rounded-3" style="background: var(--info-soft);">
+                        <i class="bi bi-lightbulb fs-4 text-info"></i>
+                        <div>
+                            <div class="fw-medium text-info-emphasis">Module-Scoped Roles</div>
+                            <div class="text-sm" style="color: #1e40af;">
+                                Roles are scoped to specific microservices. Select a module to view or create roles for that service context.
+                            </div>
+                        </div>
                     </div>
                 }
             </div>
@@ -63,8 +75,8 @@
     <div class="row g-4">
         <!-- Create Role Form -->
         <div class="col-lg-4">
-            <div class="card h-100">
-                <div class="card-header">
+            <div class="card h-100" style="border: 2px solid var(--primary); border-style: dashed;">
+                <div class="card-header" style="background: linear-gradient(135deg, var(--primary-soft) 0%, white 100%);">
                     <div class="d-flex align-items-center gap-3">
                         <div class="avatar avatar-success">
                             <i class="bi bi-plus-lg"></i>
@@ -85,13 +97,17 @@
                         <input type="hidden" asp-for="CreateRoleInput.Module" value="@Model.Module" />
                         
                         <div class="mb-4">
-                            <label class="form-label fw-medium">Role Name</label>
+                            <label class="form-label fw-medium">
+                                <i class="bi bi-tag me-1 text-muted"></i>Role Name
+                            </label>
                             <input asp-for="CreateRoleInput.Name" class="form-control" placeholder="e.g. ApprovalManager" required />
                             <div class="form-text">Use PascalCase naming convention</div>
                         </div>
                         
                         <div class="mb-4">
-                            <label class="form-label fw-medium">Description</label>
+                            <label class="form-label fw-medium">
+                                <i class="bi bi-text-paragraph me-1 text-muted"></i>Description
+                            </label>
                             <textarea asp-for="CreateRoleInput.Description" class="form-control" rows="3" placeholder="Describe this role's purpose..."></textarea>
                         </div>
                         
@@ -116,7 +132,7 @@
                             <p class="text-muted text-sm mb-0">Manage permissions for existing roles</p>
                         </div>
                     </div>
-                    <span class="badge bg-light text-dark">@Model.Roles.Count roles</span>
+                    <span class="badge bg-light text-dark fs-6">@Model.Roles.Count roles</span>
                 </div>
                 <div class="card-body p-0">
                     @if (Model.Roles.Any())
@@ -133,6 +149,7 @@
                                 <tbody>
                                     @foreach (var role in Model.Roles)
                                     {
+                                        var permCount = role.Permissions?.Count ?? 0;
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center gap-3">
@@ -141,23 +158,32 @@
                                                     </div>
                                                     <div>
                                                         <div class="fw-semibold">@role.Name</div>
-                                                        <div class="text-muted text-sm">@role.Description</div>
+                                                        <div class="text-muted text-sm line-clamp-2">@role.Description</div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <i class="bi bi-shield-lock text-muted"></i>
-                                                    <span class="fw-medium">@role.Permissions.Count</span>
-                                                    <span class="text-muted text-sm">assigned</span>
+                                                    @if (permCount > 0)
+                                                    {
+                                                        <span class="badge badge-soft-success">
+                                                            <i class="bi bi-key me-1"></i>@permCount
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-light text-muted">
+                                                            <i class="bi bi-key me-1"></i>None
+                                                        </span>
+                                                    }
                                                 </div>
                                             </td>
                                             <td class="text-end">
                                                 <a asp-controller="RolePermission" asp-action="Index" 
                                                    asp-route-module="@Model.Module" 
                                                    asp-route-roleId="@role.Id" 
-                                                   class="btn btn-sm btn-secondary">
-                                                    Configure <i class="bi bi-arrow-right ms-1"></i>
+                                                   class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-gear me-1"></i>Configure
                                                 </a>
                                             </td>
                                         </tr>
@@ -169,9 +195,11 @@
                     else
                     {
                         <div class="empty-state">
-                            <i class="bi bi-shield-x empty-state-icon"></i>
+                            <div class="avatar avatar-xl avatar-warning mx-auto mb-4">
+                                <i class="bi bi-shield-x fs-3"></i>
+                            </div>
                             <h5 class="empty-state-title">No Roles Yet</h5>
-                            <p class="empty-state-text">Create your first role for this module using the form.</p>
+                            <p class="empty-state-text">Create your first role for this module using the form on the left.</p>
                         </div>
                     }
                 </div>
@@ -181,9 +209,11 @@
 }
 else
 {
-    <div class="card">
+    <div class="card border-dashed" style="border-style: dashed; border-width: 2px;">
         <div class="empty-state">
-            <i class="bi bi-arrow-up-circle empty-state-icon"></i>
+            <div class="avatar avatar-xl avatar-primary mx-auto mb-4">
+                <i class="bi bi-box-seam fs-3"></i>
+            </div>
             <h5 class="empty-state-title">Select a Module</h5>
             <p class="empty-state-text">Choose a service module above to manage its roles and permissions.</p>
         </div>

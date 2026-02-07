@@ -8,22 +8,41 @@
     {
         return status.ToLower() switch
         {
-            "passing" => "bg-success",
-            "warning" => "bg-warning",
-            "critical" => "bg-danger",
+            "passing" => "badge-soft-success",
+            "warning" => "badge-soft-warning",
+            "critical" => "badge-soft-danger",
             _ => "bg-secondary"
+        };
+    }
+    
+    public string GetStatusIcon(string status)
+    {
+        return status.ToLower() switch
+        {
+            "passing" => "bi-check-circle-fill",
+            "warning" => "bi-exclamation-triangle-fill",
+            "critical" => "bi-x-circle-fill",
+            _ => "bi-question-circle"
         };
     }
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Registered Modules</h1>
+        <h1 class="page-title">
+            <i class="bi bi-grid-3x3-gap text-primary me-2"></i>
+            Registered Modules
+        </h1>
         <p class="page-subtitle">Services registered in Consul service discovery</p>
     </div>
-    <button type="button" class="btn btn-secondary" onclick="location.reload()">
-        <i class="bi bi-arrow-clockwise"></i> Refresh
-    </button>
+    <div class="d-flex gap-2">
+        <a href="http://localhost:8500" target="_blank" class="btn btn-outline-primary">
+            <i class="bi bi-box-arrow-up-right"></i> Consul UI
+        </a>
+        <button type="button" class="btn btn-primary" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+    </div>
 </div>
 
 @if (Model.Services.Any())
@@ -31,12 +50,13 @@
     <!-- Summary Cards -->
     <div class="row g-4 mb-6">
         <div class="col-sm-6 col-xl-3">
-            <div class="card stat-card border-0">
+            <div class="card stat-card border-0 h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <p class="stat-label mb-1">Total Services</p>
+                            <p class="stat-label mb-2">Total Services</p>
                             <h2 class="stat-value">@Model.Services.Count</h2>
+                            <p class="text-sm text-muted mb-0 mt-2">Registered modules</p>
                         </div>
                         <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                             <i class="bi bi-hdd-network"></i>
@@ -46,12 +66,13 @@
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
-            <div class="card stat-card border-0">
+            <div class="card stat-card border-0 h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <p class="stat-label mb-1">Healthy</p>
+                            <p class="stat-label mb-2">Healthy</p>
                             <h2 class="stat-value" style="color: var(--success);">@Model.HealthyCount</h2>
+                            <p class="text-sm text-muted mb-0 mt-2">Passing health checks</p>
                         </div>
                         <div class="stat-icon" style="background-color: var(--success-soft); color: var(--success);">
                             <i class="bi bi-check-circle"></i>
@@ -61,12 +82,13 @@
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
-            <div class="card stat-card border-0">
+            <div class="card stat-card border-0 h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <p class="stat-label mb-1">Warning</p>
+                            <p class="stat-label mb-2">Warning</p>
                             <h2 class="stat-value" style="color: var(--warning);">@Model.WarningCount</h2>
+                            <p class="text-sm text-muted mb-0 mt-2">Requires attention</p>
                         </div>
                         <div class="stat-icon" style="background-color: var(--warning-soft); color: var(--warning);">
                             <i class="bi bi-exclamation-triangle"></i>
@@ -76,12 +98,13 @@
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
-            <div class="card stat-card border-0">
+            <div class="card stat-card border-0 h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <p class="stat-label mb-1">Critical</p>
+                            <p class="stat-label mb-2">Critical / Offline</p>
                             <h2 class="stat-value" style="color: var(--danger);">@Model.CriticalCount</h2>
+                            <p class="text-sm text-muted mb-0 mt-2">Needs immediate action</p>
                         </div>
                         <div class="stat-icon" style="background-color: var(--danger-soft); color: var(--danger);">
                             <i class="bi bi-x-circle"></i>
@@ -96,50 +119,80 @@
     <div class="row g-4">
         @foreach (var service in Model.Services)
         {
+            var isOffline = service.Address == "N/A";
+            var statusClass = GetStatusBadgeClass(service.Status);
+            var statusIcon = GetStatusIcon(service.Status);
+            
             <div class="col-md-6 col-xl-4">
-                <div class="card h-100">
-                    <div class="card-header d-flex justify-content-between align-items-start">
+                <div class="card h-100 hover-lift @(isOffline ? "border-danger border-opacity-25" : "")">
+                    @if (isOffline)
+                    {
+                        <div class="position-absolute top-0 start-0 end-0 h-1" style="height: 4px; background: linear-gradient(90deg, var(--danger) 0%, var(--warning) 100%);"></div>
+                    }
+                    <div class="card-header d-flex justify-content-between align-items-start py-4">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="avatar" style="background-color: var(--info-soft); color: var(--info);">
-                                <i class="bi bi-server"></i>
+                            <div class="avatar avatar-lg @(isOffline ? "avatar-danger" : "avatar-info")">
+                                <i class="bi @(isOffline ? "bi-cloud-slash" : "bi-server")"></i>
                             </div>
                             <div>
-                                <h5 class="mb-0 fw-semibold">@service.Name</h5>
+                                <h5 class="mb-1 fw-semibold">@service.Name</h5>
                                 <span class="text-muted text-sm">@service.Module</span>
                             </div>
                         </div>
-                        <span class="badge @GetStatusBadgeClass(service.Status)">@service.Status</span>
+                        <span class="badge @statusClass d-flex align-items-center gap-1">
+                            <i class="bi @statusIcon"></i>
+                            @service.Status
+                        </span>
                     </div>
                     <div class="card-body">
-                        <div class="d-flex flex-column gap-2 text-sm">
-                            <div class="d-flex justify-content-between">
-                                <span class="text-muted">ID</span>
-                                <code class="text-xs">@(service.Id.Length > 12 ? service.Id.Substring(0, 12) + "..." : service.Id)</code>
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                <span class="text-muted text-sm">
+                                    <i class="bi bi-fingerprint me-2"></i>ID
+                                </span>
+                                <code class="text-xs bg-light px-2 py-1 rounded">@(service.Id.Length > 16 ? service.Id.Substring(0, 16) + "..." : service.Id)</code>
                             </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="text-muted">Address</span>
-                                <span class="fw-medium">@service.Address:@service.Port</span>
+                            <div class="d-flex justify-content-between align-items-center py-2 @(!isOffline ? "border-bottom" : "")">
+                                <span class="text-muted text-sm">
+                                    <i class="bi bi-geo-alt me-2"></i>Address
+                                </span>
+                                @if (isOffline)
+                                {
+                                    <span class="badge badge-soft-danger">
+                                        <i class="bi bi-wifi-off me-1"></i>Offline
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="fw-medium text-sm">@service.Address:@service.Port</span>
+                                }
                             </div>
                             @if (service.Tags.Any())
                             {
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <span class="text-muted">Tags</span>
-                                    <div class="d-flex flex-wrap gap-1 justify-content-end">
+                                <div class="d-flex justify-content-between align-items-start py-2">
+                                    <span class="text-muted text-sm">
+                                        <i class="bi bi-tags me-2"></i>Tags
+                                    </span>
+                                    <div class="d-flex flex-wrap gap-1 justify-content-end" style="max-width: 60%;">
                                         @foreach (var tag in service.Tags.Take(3))
                                         {
-                                            <span class="badge bg-light text-dark">@tag</span>
+                                            <span class="badge bg-light text-dark text-xs">@tag</span>
+                                        }
+                                        @if (service.Tags.Count > 3)
+                                        {
+                                            <span class="badge bg-light text-muted text-xs">+@(service.Tags.Count - 3)</span>
                                         }
                                     </div>
                                 </div>
                             }
                         </div>
                     </div>
-                    <div class="card-footer d-flex gap-2">
-                        @if (service.Address != "N/A")
+                    <div class="card-footer d-flex gap-2 py-3">
+                        @if (!isOffline)
                         {
                             <a href="http://@service.Address:@service.Port/health" 
                                target="_blank" 
-                               class="btn btn-sm btn-secondary flex-fill">
+                               class="btn btn-sm btn-light flex-fill">
                                 <i class="bi bi-heart-pulse"></i> Health
                             </a>
                             <a href="http://@service.Address:@service.Port/swagger" 
@@ -150,12 +203,12 @@
                         }
                         else
                         {
-                            <button class="btn btn-sm btn-outline-secondary flex-fill" disabled title="Service is currently offline">
-                                <i class="bi bi-heart-pulse"></i> Offline
-                            </button>
-                            <button class="btn btn-sm btn-outline-secondary flex-fill" disabled title="Service is currently offline">
-                                <i class="bi bi-book"></i> No Docs
-                            </button>
+                            <div class="w-100 text-center py-2">
+                                <span class="text-muted text-sm">
+                                    <i class="bi bi-clock-history me-1"></i>
+                                    Waiting for service to come online...
+                                </span>
+                            </div>
                         }
                     </div>
                 </div>
@@ -167,7 +220,9 @@ else
 {
     <div class="card">
         <div class="empty-state">
-            <i class="bi bi-server empty-state-icon"></i>
+            <div class="avatar avatar-xl avatar-primary mx-auto mb-4">
+                <i class="bi bi-server fs-3"></i>
+            </div>
             <h5 class="empty-state-title">No Services Registered</h5>
             <p class="empty-state-text">
                 No services are currently registered in Consul. Make sure Consul is running and services are configured to register.
@@ -178,3 +233,13 @@ else
         </div>
     </div>
 }
+
+<style>
+    .hover-lift {
+        transition: all 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    }
+</style>

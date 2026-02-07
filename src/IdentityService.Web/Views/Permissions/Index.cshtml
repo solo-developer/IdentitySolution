@@ -5,12 +5,79 @@
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Permissions</h1>
+        <h1 class="page-title">
+            <i class="bi bi-key text-primary me-2"></i>
+            Permissions
+        </h1>
         <p class="page-subtitle">Configure granular access controls across modules</p>
     </div>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPermissionModal">
         <i class="bi bi-plus-lg"></i> Add Permission
     </button>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-4 mb-6">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label mb-2">Total Permissions</p>
+                        <h2 class="stat-value">@Model.Permissions.Count</h2>
+                    </div>
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-key"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label mb-2">Active</p>
+                        <h2 class="stat-value" style="color: var(--success);">@Model.Permissions.Count(p => p.IsActive)</h2>
+                    </div>
+                    <div class="stat-icon" style="background-color: var(--success-soft); color: var(--success);">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label mb-2">Inactive</p>
+                        <h2 class="stat-value" style="color: var(--gray-400);">@Model.Permissions.Count(p => !p.IsActive)</h2>
+                    </div>
+                    <div class="stat-icon" style="background-color: var(--gray-100); color: var(--gray-400);">
+                        <i class="bi bi-pause-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0 h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label mb-2">Modules</p>
+                        <h2 class="stat-value" style="color: var(--info);">@Model.AvailableModules.Count</h2>
+                    </div>
+                    <div class="stat-icon" style="background-color: var(--info-soft); color: var(--info);">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Filters -->
@@ -65,10 +132,11 @@
                     <tbody>
                         @foreach (var permission in Model.Permissions)
                         {
-                            <tr>
+                            <tr class="@(!permission.IsActive ? "opacity-75" : "")">
                                 <td>
                                     <div class="d-flex align-items-center gap-3">
-                                        <div class="avatar avatar-sm avatar-warning">
+                                        <div class="avatar avatar-sm @(permission.IsActive ? "avatar-warning" : "")" 
+                                             style="@(!permission.IsActive ? "background-color: var(--gray-100); color: var(--gray-400);" : "")">
                                             <i class="bi bi-key"></i>
                                         </div>
                                         <div>
@@ -80,18 +148,20 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge badge-soft-primary">@permission.Module</span>
+                                    <span class="badge badge-soft-primary">
+                                        <i class="bi bi-box-seam me-1"></i>@permission.Module
+                                    </span>
                                 </td>
                                 <td>
                                     <form method="post" asp-action="ToggleStatus" class="d-inline" id="toggle_@permission.Id">
                                         <input type="hidden" name="permissionId" value="@permission.Id" />
-                                        <div class="form-check form-switch">
+                                        <div class="form-check form-switch d-inline-flex align-items-center gap-2">
                                             <input class="form-check-input cursor-pointer" 
                                                    type="checkbox" 
                                                    role="switch" 
                                                    onchange="document.getElementById('toggle_@permission.Id').submit()"
                                                    @(permission.IsActive ? "checked" : "")>
-                                            <label class="form-check-label text-sm text-muted">
+                                            <label class="form-check-label text-sm @(permission.IsActive ? "text-success" : "text-muted")">
                                                 @(permission.IsActive ? "Active" : "Inactive")
                                             </label>
                                         </div>
@@ -100,7 +170,9 @@
                                 <td class="text-end">
                                     <button type="button" 
                                             class="btn btn-icon btn-light" 
-                                            onclick="editPermission('@permission.Id', '@permission.Name.Replace("'", "\\'")', '@permission.Description.Replace("'", "\\'")', @permission.IsActive.ToString().ToLower())">
+                                            onclick="editPermission('@permission.Id', '@permission.Name.Replace("'", "\\'")', '@(permission.Description?.Replace("'", "\\'") ?? "")', @permission.IsActive.ToString().ToLower())"
+                                            data-bs-toggle="tooltip"
+                                            title="Edit Permission">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                 </td>
@@ -113,7 +185,9 @@
         else
         {
             <div class="empty-state">
-                <i class="bi bi-shield-lock empty-state-icon"></i>
+                <div class="avatar avatar-xl avatar-primary mx-auto mb-4">
+                    <i class="bi bi-shield-lock fs-3"></i>
+                </div>
                 <h5 class="empty-state-title">No Permissions Found</h5>
                 <p class="empty-state-text">Try adjusting your filters or create a new permission.</p>
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPermissionModal">
@@ -126,21 +200,33 @@
 
 <!-- Create Permission Modal -->
 <div class="modal fade" id="createPermissionModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold">Create Permission</h5>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar avatar-primary">
+                        <i class="bi bi-plus-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-semibold mb-0">Create Permission</h5>
+                        <p class="text-muted text-sm mb-0">Add a new permission to a module</p>
+                    </div>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="post" asp-action="Create">
                 <div class="modal-body">
-                    @* Binding to CreatePermissionInput properties *@
                     <div class="mb-4">
-                        <label class="form-label fw-medium">Permission Name</label>
+                        <label class="form-label fw-medium">
+                            <i class="bi bi-tag me-1 text-muted"></i>Permission Name
+                        </label>
                         <input asp-for="CreatePermissionInput.Name" class="form-control" placeholder="e.g. CanApproveOrders" required />
+                        <div class="form-text">Use descriptive names like CanRead, CanWrite, CanDelete</div>
                     </div>
                     <div class="mb-4">
-                        <label class="form-label fw-medium">Module</label>
+                        <label class="form-label fw-medium">
+                            <i class="bi bi-box-seam me-1 text-muted"></i>Module
+                        </label>
                         <select asp-for="CreatePermissionInput.Module" class="form-select" required>
                             <option value="">Select Module</option>
                             @foreach (var module in Model.AvailableModules)
@@ -150,13 +236,17 @@
                         </select>
                     </div>
                     <div class="mb-4">
-                        <label class="form-label fw-medium">Description</label>
+                        <label class="form-label fw-medium">
+                            <i class="bi bi-text-paragraph me-1 text-muted"></i>Description
+                        </label>
                         <textarea asp-for="CreatePermissionInput.Description" class="form-control" rows="3" placeholder="Describe what this permission allows..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Permission</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i> Create Permission
+                    </button>
                 </div>
             </form>
         </div>
@@ -165,34 +255,51 @@
 
 <!-- Update Permission Modal -->
 <div class="modal fade" id="updatePermissionModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold">Update Permission</h5>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar avatar-warning">
+                        <i class="bi bi-pencil"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-semibold mb-0">Update Permission</h5>
+                        <p class="text-muted text-sm mb-0">Modify permission details</p>
+                    </div>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="post" asp-action="Update">
                 <input type="hidden" id="update_permissionId" name="permissionId" />
                 <div class="modal-body">
                     <div class="mb-4">
-                        <label class="form-label fw-medium">Permission Name</label>
+                        <label class="form-label fw-medium">
+                            <i class="bi bi-tag me-1 text-muted"></i>Permission Name
+                        </label>
                         <input id="update_name" name="Name" class="form-control" required />
                     </div>
-                    @* Module should generally not be editable, logic might forbid it *@
                     <div class="mb-4">
-                        <label class="form-label fw-medium">Description</label>
+                        <label class="form-label fw-medium">
+                            <i class="bi bi-text-paragraph me-1 text-muted"></i>Description
+                        </label>
                         <textarea id="update_description" name="Description" class="form-control" rows="3"></textarea>
                     </div>
-                     <div class="mb-4">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="update_isActive" name="IsActive" value="true">
-                            <label class="form-check-label" for="update_isActive">Active</label>
+                    <div class="mb-4">
+                        <div class="p-4 rounded-3" style="background: var(--gray-50);">
+                            <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                                <label class="form-check-label fw-medium" for="update_isActive">
+                                    <i class="bi bi-toggle-on me-2 text-muted"></i>Active Status
+                                </label>
+                                <input class="form-check-input" type="checkbox" role="switch" id="update_isActive" name="IsActive" value="true" style="width: 3em; height: 1.5em;">
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Save Changes
+                    </button>
                 </div>
             </form>
         </div>
@@ -210,5 +317,13 @@
             var modal = new bootstrap.Modal(document.getElementById('updatePermissionModal'));
             modal.show();
         }
+
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
     </script>
 }
