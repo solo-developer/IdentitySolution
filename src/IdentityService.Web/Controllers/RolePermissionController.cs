@@ -32,10 +32,10 @@ public class RolePermissionController : Controller
     {
         var model = new RolePermissionMappingViewModel();
 
-        // Get all available modules from roles
-        model.AvailableModules = await _roleManager.Roles
-            .Select(r => r.Module ?? "Default")
-            .Distinct()
+        // Get available modules from persistent Modules table
+        model.AvailableModules = await _context.Modules
+            .Where(m => m.IsActive)
+            .Select(m => m.Name)
             .OrderBy(m => m)
             .ToListAsync();
 
