@@ -1,178 +1,114 @@
 @model IdentityService.Web.ViewModels.PermissionListViewModel
 @{
-    ViewData["Title"] = "Permission Management";
+    ViewData["Title"] = "Permissions";
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">
-            <i class="bi bi-key text-primary me-2"></i>
-            Permissions
-        </h1>
-        <p class="page-subtitle">Configure granular access controls across modules</p>
+        <h1 class="page-title">Permissions</h1>
+        <p class="page-description">Configure granular access controls for each module</p>
     </div>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPermissionModal">
-        <i class="bi bi-plus-lg"></i> Add Permission
-    </button>
+    @if (!string.IsNullOrEmpty(Model.SelectedModule))
+    {
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+            <i class="bi bi-plus"></i> Add Permission
+        </button>
+    }
 </div>
 
-<!-- Quick Stats -->
-<div class="row g-4 mb-6">
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="stat-label mb-2">Total Permissions</p>
-                        <h2 class="stat-value">@Model.Permissions.Count</h2>
-                    </div>
-                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-                        <i class="bi bi-key"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="stat-label mb-2">Active</p>
-                        <h2 class="stat-value" style="color: var(--success);">@Model.Permissions.Count(p => p.IsActive)</h2>
-                    </div>
-                    <div class="stat-icon" style="background-color: var(--success-soft); color: var(--success);">
-                        <i class="bi bi-check-circle"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="stat-label mb-2">Inactive</p>
-                        <h2 class="stat-value" style="color: var(--gray-400);">@Model.Permissions.Count(p => !p.IsActive)</h2>
-                    </div>
-                    <div class="stat-icon" style="background-color: var(--gray-100); color: var(--gray-400);">
-                        <i class="bi bi-pause-circle"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="stat-label mb-2">Modules</p>
-                        <h2 class="stat-value" style="color: var(--info);">@Model.AvailableModules.Count</h2>
-                    </div>
-                    <div class="stat-icon" style="background-color: var(--info-soft); color: var(--info);">
-                        <i class="bi bi-box-seam"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Filters -->
-<div class="card mb-5">
-    <div class="card-body">
-        <form method="get" asp-action="Index" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="section-title">Module Filter</label>
-                <select name="module" class="form-select" onchange="this.form.submit()">
-                    <option value="">All Modules</option>
+<!-- Module Selector -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted text-sm">Module:</span>
+            <form method="get" asp-action="Index" id="moduleForm" class="d-flex align-items-center gap-2">
+                <select name="module" class="form-select form-control-sm" style="width: 200px;" onchange="this.form.submit()">
+                    <option value="">Select a module</option>
                     @foreach (var module in Model.AvailableModules)
                     {
                         <option value="@module" selected="@(module == Model.SelectedModule)">@module</option>
                     }
                 </select>
-            </div>
-            <div class="col-md-4">
-                <label class="section-title">Status Filter</label>
-                <select name="status" class="form-select" onchange="this.form.submit()">
-                    <option value="">Any Status</option>
-                    <option value="active" selected="@(Model.StatusFilter == "active")">Active Only</option>
-                    <option value="inactive" selected="@(Model.StatusFilter == "inactive")">Inactive Only</option>
-                </select>
-            </div>
-            <div class="col-md-4 text-end">
-                @if(!string.IsNullOrEmpty(Model.SelectedModule) || !string.IsNullOrEmpty(Model.StatusFilter)) 
-                {
-                    <a asp-action="Index" class="btn btn-secondary">
-                        <i class="bi bi-x-lg"></i> Clear Filters
+            </form>
+            
+            @if (!string.IsNullOrEmpty(Model.SelectedModule))
+            {
+                <div class="d-flex gap-2 ms-4">
+                    <a asp-action="Index" asp-route-module="@Model.SelectedModule" 
+                       class="btn btn-sm @(string.IsNullOrEmpty(Model.StatusFilter) ? "btn-primary" : "btn-secondary")">
+                        All
                     </a>
-                }
-            </div>
-        </form>
+                    <a asp-action="Index" asp-route-module="@Model.SelectedModule" asp-route-status="active"
+                       class="btn btn-sm @(Model.StatusFilter == "active" ? "btn-primary" : "btn-secondary")">
+                        Active
+                    </a>
+                    <a asp-action="Index" asp-route-module="@Model.SelectedModule" asp-route-status="inactive"
+                       class="btn btn-sm @(Model.StatusFilter == "inactive" ? "btn-primary" : "btn-secondary")">
+                        Inactive
+                    </a>
+                </div>
+                
+                <span class="text-muted text-sm ms-auto">
+                    <strong>@Model.Permissions.Count</strong> permissions
+                </span>
+            }
+        </div>
     </div>
 </div>
 
-<!-- Permissions Table -->
-<div class="card">
-    <div class="card-body p-0">
-        @if (Model.Permissions.Any())
-        {
-            <div class="table-responsive">
-                <table class="table table-hover mb-0 datatable">
+@if (string.IsNullOrEmpty(Model.SelectedModule))
+{
+    <div class="card">
+        <div class="empty-state">
+            <i class="bi bi-box-seam empty-state-icon"></i>
+            <h5 class="empty-state-title">Select a Module</h5>
+            <p class="empty-state-text">Choose a module from the dropdown above to view and manage its permissions.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body p-0">
+            @if (Model.Permissions.Any())
+            {
+                <table class="table mb-0" id="permissionsTable">
                     <thead>
                         <tr>
-                            <th>Permission</th>
-                            <th>Module</th>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
+                            <th style="width: 40px;"></th>
+                            <th>Permission Name</th>
+                            <th>Description</th>
+                            <th style="width: 100px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var permission in Model.Permissions)
                         {
-                            <tr class="@(!permission.IsActive ? "opacity-75" : "")">
-                                <td>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="avatar avatar-sm @(permission.IsActive ? "avatar-warning" : "")" 
-                                             style="@(!permission.IsActive ? "background-color: var(--gray-100); color: var(--gray-400);" : "")">
-                                            <i class="bi bi-key"></i>
-                                        </div>
-                                        <div>
-                                            <div class="fw-semibold">@permission.Name</div>
-                                            <div class="text-muted text-sm text-truncate" style="max-width: 300px;">
-                                                @permission.Description
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge badge-soft-primary">
-                                        <i class="bi bi-box-seam me-1"></i>@permission.Module
-                                    </span>
-                                </td>
-                                <td>
+                            <tr class="@(!permission.IsActive ? "opacity-50" : "")">
+                                <td class="text-center">
                                     <form method="post" asp-action="ToggleStatus" class="d-inline" id="toggle_@permission.Id">
                                         <input type="hidden" name="permissionId" value="@permission.Id" />
-                                        <div class="form-check form-switch d-inline-flex align-items-center gap-2">
-                                            <input class="form-check-input cursor-pointer" 
+                                        <input type="hidden" name="module" value="@Model.SelectedModule" />
+                                        <div class="form-switch">
+                                            <input class="form-check-input" 
                                                    type="checkbox" 
-                                                   role="switch" 
                                                    onchange="document.getElementById('toggle_@permission.Id').submit()"
                                                    @(permission.IsActive ? "checked" : "")>
-                                            <label class="form-check-label text-sm @(permission.IsActive ? "text-success" : "text-muted")">
-                                                @(permission.IsActive ? "Active" : "Inactive")
-                                            </label>
                                         </div>
                                     </form>
                                 </td>
-                                <td class="text-end">
+                                <td>
+                                    <code>@permission.Name</code>
+                                </td>
+                                <td class="text-muted text-sm">
+                                    @(string.IsNullOrEmpty(permission.Description) ? "—" : permission.Description)
+                                </td>
+                                <td>
                                     <button type="button" 
-                                            class="btn btn-icon btn-light" 
-                                            onclick="editPermission('@permission.Id', '@permission.Name.Replace("'", "\\'")', '@(permission.Description?.Replace("'", "\\'") ?? "")', @permission.IsActive.ToString().ToLower())"
-                                            data-bs-toggle="tooltip"
-                                            title="Edit Permission">
+                                            class="btn btn-sm btn-ghost"
+                                            onclick="editPermission('@permission.Id', '@permission.Name.Replace("'", "\\'")', '@(permission.Description?.Replace("'", "\\'").Replace("\n", " ").Replace("\r", "") ?? "")', @permission.IsActive.ToString().ToLower())"
+                                            data-bs-toggle="tooltip" 
+                                            title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                 </td>
@@ -180,126 +116,94 @@
                         }
                     </tbody>
                 </table>
-            </div>
-        }
-        else
-        {
-            <div class="empty-state">
-                <div class="avatar avatar-xl avatar-primary mx-auto mb-4">
-                    <i class="bi bi-shield-lock fs-3"></i>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-key empty-state-icon"></i>
+                    <h5 class="empty-state-title">No permissions found</h5>
+                    <p class="empty-state-text">
+                        @if (!string.IsNullOrEmpty(Model.StatusFilter))
+                        {
+                            <text>No @Model.StatusFilter permissions. Try changing the filter.</text>
+                        }
+                        else
+                        {
+                            <text>Create the first permission for @Model.SelectedModule module.</text>
+                        }
+                    </p>
+                    @if (string.IsNullOrEmpty(Model.StatusFilter))
+                    {
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+                            <i class="bi bi-plus"></i> Add Permission
+                        </button>
+                    }
                 </div>
-                <h5 class="empty-state-title">No Permissions Found</h5>
-                <p class="empty-state-text">Try adjusting your filters or create a new permission.</p>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPermissionModal">
-                    <i class="bi bi-plus-lg"></i> Create Permission
-                </button>
-            </div>
-        }
+            }
+        </div>
     </div>
-</div>
+}
 
-<!-- Create Permission Modal -->
-<div class="modal fade" id="createPermissionModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+<!-- Create Modal -->
+<div class="modal fade" id="createModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="avatar avatar-primary">
-                        <i class="bi bi-plus-lg"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title fw-semibold mb-0">Create Permission</h5>
-                        <p class="text-muted text-sm mb-0">Add a new permission to a module</p>
-                    </div>
-                </div>
+                <h5 class="modal-title">Create Permission</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="post" asp-action="Create">
+                <input type="hidden" name="Module" value="@Model.SelectedModule" />
                 <div class="modal-body">
-                    <div class="mb-4">
-                        <label class="form-label fw-medium">
-                            <i class="bi bi-tag me-1 text-muted"></i>Permission Name
-                        </label>
-                        <input asp-for="CreatePermissionInput.Name" class="form-control" placeholder="e.g. CanApproveOrders" required />
+                    <div class="form-group">
+                        <label class="form-label required">Permission Name</label>
+                        <input name="Name" class="form-control" placeholder="e.g. CanApproveOrders" required />
                         <div class="form-text">Use descriptive names like CanRead, CanWrite, CanDelete</div>
                     </div>
-                    <div class="mb-4">
-                        <label class="form-label fw-medium">
-                            <i class="bi bi-box-seam me-1 text-muted"></i>Module
-                        </label>
-                        <select asp-for="CreatePermissionInput.Module" class="form-select" required>
-                            <option value="">Select Module</option>
-                            @foreach (var module in Model.AvailableModules)
-                            {
-                                <option value="@module">@module</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label fw-medium">
-                            <i class="bi bi-text-paragraph me-1 text-muted"></i>Description
-                        </label>
-                        <textarea asp-for="CreatePermissionInput.Description" class="form-control" rows="3" placeholder="Describe what this permission allows..."></textarea>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Description</label>
+                        <textarea name="Description" class="form-control" rows="2" placeholder="Optional description"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-plus-lg"></i> Create Permission
-                    </button>
+                    <button type="submit" class="btn btn-primary">Create</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Update Permission Modal -->
-<div class="modal fade" id="updatePermissionModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="avatar avatar-warning">
-                        <i class="bi bi-pencil"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title fw-semibold mb-0">Update Permission</h5>
-                        <p class="text-muted text-sm mb-0">Modify permission details</p>
-                    </div>
-                </div>
+                <h5 class="modal-title">Edit Permission</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="post" asp-action="Update">
-                <input type="hidden" id="update_permissionId" name="permissionId" />
+                <input type="hidden" id="edit_id" name="permissionId" />
+                <input type="hidden" name="module" value="@Model.SelectedModule" />
                 <div class="modal-body">
-                    <div class="mb-4">
-                        <label class="form-label fw-medium">
-                            <i class="bi bi-tag me-1 text-muted"></i>Permission Name
-                        </label>
-                        <input id="update_name" name="Name" class="form-control" required />
+                    <div class="form-group">
+                        <label class="form-label required">Permission Name</label>
+                        <input id="edit_name" name="Name" class="form-control" required />
                     </div>
-                    <div class="mb-4">
-                        <label class="form-label fw-medium">
-                            <i class="bi bi-text-paragraph me-1 text-muted"></i>Description
-                        </label>
-                        <textarea id="update_description" name="Description" class="form-control" rows="3"></textarea>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="edit_description" name="Description" class="form-control" rows="2"></textarea>
                     </div>
-                    <div class="mb-4">
-                        <div class="p-4 rounded-3" style="background: var(--gray-50);">
-                            <div class="form-check form-switch d-flex justify-content-between align-items-center">
-                                <label class="form-check-label fw-medium" for="update_isActive">
-                                    <i class="bi bi-toggle-on me-2 text-muted"></i>Active Status
-                                </label>
-                                <input class="form-check-input" type="checkbox" role="switch" id="update_isActive" name="IsActive" value="true" style="width: 3em; height: 1.5em;">
-                            </div>
+                    <div class="form-group mb-0">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="edit_isActive" name="IsActive" value="true">
+                            <label class="form-check-label" for="edit_isActive">Active</label>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-lg"></i> Save Changes
-                    </button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
         </div>
@@ -309,21 +213,27 @@
 @section Scripts {
     <script>
         function editPermission(id, name, description, isActive) {
-            document.getElementById('update_permissionId').value = id;
-            document.getElementById('update_name').value = name;
-            document.getElementById('update_description').value = description;
-            document.getElementById('update_isActive').checked = isActive;
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_name').value = name;
+            document.getElementById('edit_description').value = description;
+            document.getElementById('edit_isActive').checked = isActive;
             
-            var modal = new bootstrap.Modal(document.getElementById('updatePermissionModal'));
+            var modal = new bootstrap.Modal(document.getElementById('editModal'));
             modal.show();
         }
-
-        // Initialize tooltips
-        document.addEventListener('DOMContentLoaded', function() {
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
+        
+        $(document).ready(function() {
+            if ($('#permissionsTable tbody tr').length > 15) {
+                $('#permissionsTable').DataTable({
+                    pageLength: 50,
+                    order: [[1, 'asc']],
+                    language: {
+                        search: "Search:",
+                        lengthMenu: "Show _MENU_",
+                        info: "_START_ - _END_ of _TOTAL_"
+                    }
+                });
+            }
         });
     </script>
 }

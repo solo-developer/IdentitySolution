@@ -3,189 +3,159 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Identity Admin - Enterprise Identity & Access Management" />
-    <meta name="theme-color" content="#6366f1" />
     <title>@ViewData["Title"] - Identity Admin</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Bootstrap -->
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
-    <!-- App Styles -->
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <div class="layout-container">
+    <div class="admin-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="bi bi-shield-lock-fill"></i>
-                <span>Identity Admin</span>
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <span class="sidebar-brand-text">Identity Admin</span>
             </div>
             
             <nav class="sidebar-nav">
-                <a asp-controller="Home" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a asp-controller="Home" asp-action="Index" 
+                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+                        <i class="bi bi-grid"></i>
+                        Dashboard
+                    </a>
+                </div>
                 
-                <div>Access Control</div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Access Management</div>
+                    <a asp-controller="Users" asp-action="Index" 
+                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" ? "active" : "")">
+                        <i class="bi bi-people"></i>
+                        Users
+                    </a>
+                    <a asp-controller="Roles" asp-action="Index" 
+                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Roles" ? "active" : "")">
+                        <i class="bi bi-person-badge"></i>
+                        Roles
+                    </a>
+                    <a asp-controller="Permissions" asp-action="Index" 
+                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Permissions" ? "active" : "")">
+                        <i class="bi bi-key"></i>
+                        Permissions
+                    </a>
+                    <a asp-controller="RolePermission" asp-action="Index" 
+                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "RolePermission" ? "active" : "")">
+                        <i class="bi bi-diagram-3"></i>
+                        Role Mapping
+                    </a>
+                </div>
                 
-                <a asp-controller="Users" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Users" ? "active" : "")">
-                    <i class="bi bi-people"></i> Users
-                </a>
-                <a asp-controller="Roles" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Roles" ? "active" : "")">
-                    <i class="bi bi-person-badge"></i> Roles
-                </a>
-                <a asp-controller="Permissions" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Permissions" ? "active" : "")">
-                    <i class="bi bi-key"></i> Permissions
-                </a>
-                <a asp-controller="RolePermission" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "RolePermission" ? "active" : "")">
-                    <i class="bi bi-diagram-3"></i> Mapping
-                </a>
-
-                <div>Infrastructure</div>
-                
-                <a asp-controller="Modules" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Modules" ? "active" : "")">
-                    <i class="bi bi-grid-3x3-gap"></i> Modules
-                </a>
-                <a asp-controller="Ldap" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Ldap" ? "active" : "")">
-                    <i class="bi bi-diagram-2"></i> LDAP Sync
-                </a>
+                <div class="nav-section">
+                    <div class="nav-section-title">System</div>
+                    <a asp-controller="Modules" asp-action="Index" 
+                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Modules" ? "active" : "")">
+                        <i class="bi bi-hdd-network"></i>
+                        Modules
+                    </a>
+                    <a asp-controller="Ldap" asp-action="Index" 
+                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Ldap" ? "active" : "")">
+                        <i class="bi bi-diagram-2"></i>
+                        LDAP Sync
+                    </a>
+                </div>
             </nav>
             
             <div class="sidebar-footer">
-                <div class="d-flex align-items-center gap-3 mb-3 px-2">
-                    <div class="avatar avatar-sm" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc;">
-                        <i class="bi bi-person"></i>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        @{
+                            var userName = User.Identity?.Name ?? "Admin";
+                            var initials = userName.Length >= 2 ? userName.Substring(0, 2).ToUpper() : userName.ToUpper();
+                        }
+                        @initials
                     </div>
-                    <div class="flex-grow-1" style="min-width: 0;">
-                        <div class="text-white text-sm fw-medium truncate">@User.Identity?.Name</div>
-                        <div class="text-xs" style="color: #64748b;">Administrator</div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div class="truncate" style="color: white; font-weight: 500;">@userName</div>
+                        <div class="text-xs">Administrator</div>
                     </div>
+                    <a asp-controller="Account" asp-action="Logout" class="btn-ghost" style="color: var(--gray-400); padding: 4px;" title="Sign out">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </a>
                 </div>
-                <form method="post" asp-controller="Account" asp-action="Logout">
-                    <button type="submit" class="btn btn-sm w-100" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: #94a3b8;">
-                        <i class="bi bi-box-arrow-right"></i> Sign Out
-                    </button>
-                </form>
             </div>
         </aside>
-
+        
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Toast Container -->
-            <div id="toastContainer" class="toast-container" style="position: fixed; top: 24px; right: 24px; z-index: 9999;">
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div class="toast show align-items-center text-white border-0" role="alert" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px;">
-                        <div class="d-flex">
-                            <div class="toast-body d-flex align-items-center gap-3">
-                                <i class="bi bi-check-circle-fill fs-5"></i>
-                                <span>@TempData["SuccessMessage"]</span>
-                            </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                        </div>
-                    </div>
-                }
-                @if (TempData["ErrorMessage"] != null)
-                {
-                    <div class="toast show align-items-center text-white border-0" role="alert" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border-radius: 12px;">
-                        <div class="d-flex">
-                            <div class="toast-body d-flex align-items-center gap-3">
-                                <i class="bi bi-exclamation-circle-fill fs-5"></i>
-                                <span>@TempData["ErrorMessage"]</span>
-                            </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                        </div>
-                    </div>
-                }
+            <div class="content-body">
+                @RenderBody()
             </div>
-
-            @RenderBody()
         </main>
     </div>
     
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     
     <script>
-        $(document).ready(function() {
-            // Initialize DataTables
-            $('.datatable').DataTable({
-                "language": {
-                    "search": "",
-                    "searchPlaceholder": "Search...",
-                    "info": "Showing _START_ to _END_ of _TOTAL_ entries",
-                    "infoEmpty": "No entries to show",
-                    "infoFiltered": "(filtered from _MAX_ total)",
-                    "lengthMenu": "Show _MENU_ entries",
-                    "zeroRecords": "No matching records found",
-                    "paginate": {
-                        "first": '<i class="bi bi-chevron-double-left"></i>',
-                        "last": '<i class="bi bi-chevron-double-right"></i>',
-                        "next": '<i class="bi bi-chevron-right"></i>',
-                        "previous": '<i class="bi bi-chevron-left"></i>'
-                    }
-                },
-                "dom": '<"d-flex justify-content-between align-items-center px-4 py-3 border-bottom"f><"table-responsive"t><"d-flex justify-content-between align-items-center px-4 py-3"ip>',
-                "pageLength": 10,
-                "ordering": true,
-                "info": true,
-                "autoWidth": false,
-                "responsive": true,
-                "drawCallback": function() {
-                    // Animate rows on draw
-                    $(this.api().rows({ page: 'current' }).nodes()).each(function(index) {
-                        $(this).css({
-                            'animation': 'fadeInUp 0.3s ease forwards',
-                            'animation-delay': (index * 0.03) + 's',
-                            'opacity': '0'
-                        });
-                    });
-                }
-            });
-
-            // Auto-dismiss toasts after 5 seconds
-            setTimeout(function() {
-                $('.toast').fadeOut(500, function() {
-                    $(this).remove();
-                });
-            }, 5000);
-
-            // Click to dismiss toasts
-            $('.toast').on('click', function() {
-                $(this).fadeOut(300, function() {
-                    $(this).remove();
-                });
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+        
+        // Display flash messages
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>showToast('@TempData["SuccessMessage"]', 'success');</text>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <text>showToast('@TempData["ErrorMessage"]', 'error');</text>
+        }
+        
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (el) {
+                return new bootstrap.Tooltip(el);
             });
         });
-
-        // Add fadeInUp animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @@keyframes fadeInUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(10px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
-
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

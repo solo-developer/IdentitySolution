@@ -1,197 +1,103 @@
 @model IdentityService.Web.ViewModels.UserIndexViewModel
 @{
-    ViewData["Title"] = "User Management";
+    ViewData["Title"] = "Users";
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">
-            <i class="bi bi-people text-primary me-2"></i>
-            Users
-        </h1>
-        <p class="page-subtitle">Manage user accounts and access permissions</p>
+        <h1 class="page-title">Users</h1>
+        <p class="page-description">Manage user accounts and role assignments</p>
     </div>
     <div class="d-flex gap-2">
-        <a asp-controller="Ldap" asp-action="Index" class="btn btn-outline-primary">
-            <i class="bi bi-cloud-arrow-down"></i> LDAP Sync
-        </a>
         <a asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Add User
+            <i class="bi bi-plus"></i> Add User
         </a>
     </div>
 </div>
 
-<!-- Quick Stats -->
-<div class="row g-4 mb-6">
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="stat-label mb-2">Total Users</p>
-                        <h2 class="stat-value">@Model.Users.Count</h2>
-                    </div>
-                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-                        <i class="bi bi-people"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Stats -->
+<div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value">@Model.Users.Count</div>
     </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="stat-label mb-2">Active</p>
-                        <h2 class="stat-value" style="color: var(--success);">@Model.Users.Count(u => u.IsActive)</h2>
-                    </div>
-                    <div class="stat-icon" style="background-color: var(--success-soft); color: var(--success);">
-                        <i class="bi bi-person-check"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="stat-card">
+        <div class="stat-label">With Roles</div>
+        <div class="stat-value">@Model.Users.Count(u => u.Roles.Any())</div>
     </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="stat-label mb-2">Inactive</p>
-                        <h2 class="stat-value" style="color: var(--gray-400);">@Model.Users.Count(u => !u.IsActive)</h2>
-                    </div>
-                    <div class="stat-icon" style="background-color: var(--gray-100); color: var(--gray-400);">
-                        <i class="bi bi-person-slash"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card border-0 h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="stat-label mb-2">With Roles</p>
-                        <h2 class="stat-value" style="color: var(--info);">@Model.Users.Count(u => u.Roles != null && u.Roles.Any())</h2>
-                    </div>
-                    <div class="stat-icon" style="background-color: var(--info-soft); color: var(--info);">
-                        <i class="bi bi-shield-check"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="stat-card">
+        <div class="stat-label">No Roles Assigned</div>
+        <div class="stat-value">@Model.Users.Count(u => !u.Roles.Any())</div>
     </div>
 </div>
 
+<!-- Users Table -->
 <div class="card">
     <div class="card-body p-0">
         @if (Model.Users.Any())
         {
-            <div class="table-responsive">
-                <table class="table table-hover mb-0 datatable">
-                    <thead>
+            <table class="table mb-0" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Roles</th>
+                        <th style="width: 100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.Users)
+                    {
                         <tr>
-                            <th>User</th>
-                            <th>Role Access</th>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
+                            <td>
+                                <span class="font-medium">@user.FullName</span>
+                            </td>
+                            <td>
+                                <code>@user.UserName</code>
+                            </td>
+                            <td class="text-muted">@user.Email</td>
+                            <td>
+                                @if (user.Roles.Any())
+                                {
+                                    @foreach (var role in user.Roles.Take(3))
+                                    {
+                                        <span class="badge badge-primary me-1">@role</span>
+                                    }
+                                    @if (user.Roles.Count > 3)
+                                    {
+                                        <span class="badge badge-gray">+@(user.Roles.Count - 3)</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted text-sm">—</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a asp-action="Edit" asp-route-id="@user.Id" 
+                                       class="btn btn-sm btn-ghost" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Edit user">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var user in Model.Users)
-                        {
-                            var initials = !string.IsNullOrEmpty(user.FullName) && user.FullName.Length > 0 
-                                ? user.FullName.Split(' ').Where(s => s.Length > 0).Select(s => s[0].ToString().ToUpper()).Take(2).Aggregate("", (a, b) => a + b)
-                                : user.UserName?.Substring(0, 1).ToUpper() ?? "?";
-                            
-                            var avatarColors = new[] { 
-                                ("bg-primary bg-opacity-10", "text-primary"),
-                                ("bg-success bg-opacity-10", "text-success"),
-                                ("bg-warning bg-opacity-10", "text-warning"),
-                                ("bg-info bg-opacity-10", "text-info")
-                            };
-                            var colorIndex = Math.Abs(user.Id.GetHashCode()) % avatarColors.Length;
-                            var (bgClass, textClass) = avatarColors[colorIndex];
-                            
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="avatar @bgClass @textClass fw-semibold">
-                                            @initials
-                                        </div>
-                                        <div>
-                                            <div class="fw-semibold">@user.FullName</div>
-                                            <div class="text-muted text-sm">@user.Email</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    @if (user.Roles != null && user.Roles.Any())
-                                    {
-                                        <div class="d-flex flex-wrap gap-1">
-                                            @foreach (var role in user.Roles.Take(3))
-                                            {
-                                                <span class="badge badge-soft-primary">@role</span>
-                                            }
-                                            @if (user.Roles.Count() > 3)
-                                            {
-                                                <span class="badge bg-light text-muted" data-bs-toggle="tooltip" title="@string.Join(", ", user.Roles.Skip(3))">
-                                                    +@(user.Roles.Count() - 3) more
-                                                </span>
-                                            }
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted text-sm fst-italic">
-                                            <i class="bi bi-dash-circle me-1"></i>No roles
-                                        </span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (user.IsActive)
-                                    {
-                                        <span class="status-pill active">Active</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="status-pill inactive">Inactive</span>
-                                    }
-                                </td>
-                                <td class="text-end">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <a asp-action="Edit" asp-route-id="@user.Id" 
-                                           class="btn btn-icon btn-light" 
-                                           title="Edit User"
-                                           data-bs-toggle="tooltip">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         }
         else
         {
             <div class="empty-state">
-                <div class="avatar avatar-xl avatar-primary mx-auto mb-4">
-                    <i class="bi bi-people fs-3"></i>
-                </div>
-                <h5 class="empty-state-title">No Users Found</h5>
-                <p class="empty-state-text">Get started by creating your first user account or syncing from LDAP.</p>
-                <div class="d-flex gap-2 justify-content-center">
-                    <a asp-controller="Ldap" asp-action="Index" class="btn btn-outline-primary">
-                        <i class="bi bi-cloud-arrow-down"></i> LDAP Sync
-                    </a>
-                    <a asp-action="Create" class="btn btn-primary">
-                        <i class="bi bi-plus-lg"></i> Create User
-                    </a>
-                </div>
+                <i class="bi bi-people empty-state-icon"></i>
+                <h5 class="empty-state-title">No users found</h5>
+                <p class="empty-state-text">Get started by creating your first user account.</p>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus"></i> Add User
+                </a>
             </div>
         }
     </div>
@@ -200,11 +106,21 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Initialize tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
+            if ($('#usersTable tbody tr').length > 10) {
+                $('#usersTable').DataTable({
+                    pageLength: 25,
+                    order: [[0, 'asc']],
+                    language: {
+                        search: "Search:",
+                        lengthMenu: "Show _MENU_",
+                        info: "_START_ - _END_ of _TOTAL_",
+                        paginate: {
+                            previous: '<i class="bi bi-chevron-left"></i>',
+                            next: '<i class="bi bi-chevron-right"></i>'
+                        }
+                    }
+                });
+            }
         });
     </script>
 }

@@ -5,124 +5,61 @@
 
 <div class="page-header">
     <div>
-        <a asp-action="Index" class="text-muted text-sm d-inline-flex align-items-center gap-1 mb-2 text-decoration-none">
-            <i class="bi bi-arrow-left"></i> Back to Users
-        </a>
-        <h1 class="page-title">
-            <i class="bi bi-person-plus text-primary me-2"></i>
-            Create User
-        </h1>
-        <p class="page-subtitle">Register a new user account</p>
+        <div class="breadcrumb">
+            <a asp-action="Index">Users</a> / Create
+        </div>
+        <h1 class="page-title">Create User</h1>
+        <p class="page-description">Add a new user account to the system</p>
     </div>
 </div>
 
 <div class="row justify-content-center">
-    <div class="col-lg-8 col-xl-6">
-        <div class="card" style="border: 2px solid var(--primary); border-style: dashed;">
-            <div class="card-header" style="background: linear-gradient(135deg, var(--primary-soft) 0%, white 100%);">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="avatar avatar-xl avatar-primary">
-                        <i class="bi bi-person-plus fs-4"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-0 fw-semibold">User Details</h5>
-                        <p class="text-muted text-sm mb-0">Fill in the information below to create a new account</p>
-                    </div>
-                </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">User Details</h5>
             </div>
-            <div class="card-body p-5">
+            <div class="card-body">
                 <form method="post" asp-action="Create">
-                    <div asp-validation-summary="All" class="alert alert-soft-danger mb-4" role="alert"></div>
+                    <div asp-validation-summary="All" class="alert alert-danger mb-4"></div>
                     
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <label asp-for="FullName" class="form-label fw-medium">
-                                <i class="bi bi-person me-1 text-muted"></i>Full Name
-                            </label>
-                            <input asp-for="FullName" class="form-control form-control-lg" placeholder="John Doe" />
-                            <span asp-validation-for="FullName" class="text-danger text-sm"></span>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label asp-for="UserName" class="form-label fw-medium">
-                                <i class="bi bi-at me-1 text-muted"></i>Username
-                            </label>
-                            <input asp-for="UserName" class="form-control form-control-lg" placeholder="johndoe" />
-                            <span asp-validation-for="UserName" class="text-danger text-sm"></span>
-                        </div>
-
-                        <div class="col-12">
-                            <label asp-for="Email" class="form-label fw-medium">
-                                <i class="bi bi-envelope me-1 text-muted"></i>Email Address
-                            </label>
-                            <input asp-for="Email" class="form-control form-control-lg" type="email" placeholder="john@example.com" />
-                            <span asp-validation-for="Email" class="text-danger text-sm"></span>
-                        </div>
-
-                        <div class="col-12">
-                            <label asp-for="Password" class="form-label fw-medium">
-                                <i class="bi bi-lock me-1 text-muted"></i>Password
-                            </label>
-                            <div class="input-group">
-                                <input asp-for="Password" class="form-control form-control-lg" type="password" id="passwordInput" placeholder="Enter a strong password" />
-                                <button class="btn btn-light" type="button" onclick="togglePassword()">
-                                    <i class="bi bi-eye" id="toggleIcon"></i>
-                                </button>
-                            </div>
-                            <span asp-validation-for="Password" class="text-danger text-sm"></span>
-                        </div>
-                        
-                        <div class="col-12">
-                            <div class="p-4 rounded-3" style="background: var(--info-soft);">
-                                <div class="d-flex gap-3">
-                                    <i class="bi bi-shield-check text-info fs-5"></i>
-                                    <div>
-                                        <div class="fw-medium text-info-emphasis mb-2">Password Requirements</div>
-                                        <ul class="mb-0 ps-3 text-sm" style="color: #1e40af;">
-                                            <li>At least 6 characters long</li>
-                                            <li>Mix of uppercase and lowercase letters</li>
-                                            <li>Include numbers and special characters</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label asp-for="FullName" class="form-label required">Full Name</label>
+                        <input asp-for="FullName" class="form-control" placeholder="John Doe" />
+                        <span asp-validation-for="FullName" class="text-danger text-xs"></span>
                     </div>
-
-                    <div class="d-flex justify-content-between gap-3 mt-5 pt-4 border-top">
-                        <a asp-action="Index" class="btn btn-secondary">
-                            <i class="bi bi-x-lg"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-check-lg"></i> Create Account
+                    
+                    <div class="form-group">
+                        <label asp-for="UserName" class="form-label required">Username</label>
+                        <input asp-for="UserName" class="form-control" placeholder="johndoe" />
+                        <span asp-validation-for="UserName" class="text-danger text-xs"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Email" class="form-label required">Email</label>
+                        <input asp-for="Email" class="form-control" type="email" placeholder="john@example.com" />
+                        <span asp-validation-for="Email" class="text-danger text-xs"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Password" class="form-label required">Password</label>
+                        <input asp-for="Password" class="form-control" type="password" placeholder="Enter password" />
+                        <span asp-validation-for="Password" class="text-danger text-xs"></span>
+                        <div class="form-text">Minimum 6 characters with mixed case, numbers, and special characters</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between pt-4 border-top mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check"></i> Create User
                         </button>
                     </div>
                 </form>
             </div>
-        </div>
-        
-        <!-- Help Text -->
-        <div class="text-center mt-4 text-muted text-sm">
-            <i class="bi bi-lightbulb me-1"></i>
-            After creating the account, you can assign roles to the user from the Edit User page.
         </div>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        function togglePassword() {
-            const input = document.getElementById('passwordInput');
-            const icon = document.getElementById('toggleIcon');
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.className = 'bi bi-eye-slash';
-            } else {
-                input.type = 'password';
-                icon.className = 'bi bi-eye';
-            }
-        }
-    </script>
 }

@@ -1,357 +1,170 @@
 @model IdentityService.Web.ViewModels.EditUserViewModel
 @{
     ViewData["Title"] = "Edit User";
-    var initials = !string.IsNullOrEmpty(Model.FullName) && Model.FullName.Length > 0 
-        ? Model.FullName.Split(' ').Where(s => s.Length > 0).Select(s => s[0].ToString().ToUpper()).Take(2).Aggregate("", (a, b) => a + b)
-        : Model.UserName?.Substring(0, 1).ToUpper() ?? "?";
+    var allRoles = Model.GroupedRoles.Values.SelectMany(r => r).ToList();
 }
 
 <div class="page-header">
     <div>
-        <a asp-action="Index" class="text-muted text-sm d-inline-flex align-items-center gap-1 mb-2 text-decoration-none">
-            <i class="bi bi-arrow-left"></i> Back to Users
-        </a>
-        <h1 class="page-title">Edit User</h1>
-        <p class="page-subtitle">
-            Managing access for <span class="fw-semibold text-primary">@Model.FullName</span>
-        </p>
-    </div>
-    <div class="d-flex align-items-center gap-3">
-        <div class="avatar avatar-xl avatar-primary">
-            @initials
+        <div class="breadcrumb">
+            <a asp-action="Index">Users</a> / Edit
         </div>
-        <div>
-            <div class="fw-semibold fs-5">@Model.FullName</div>
-            <div class="text-muted">@Model.Email</div>
-        </div>
+        <h1 class="page-title">@Model.FullName</h1>
+        <p class="page-description">@Model.Email</p>
     </div>
 </div>
 
-<form method="post" asp-action="Edit">
-    <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="UserName" />
-    <input type="hidden" asp-for="Email" />
-    <input type="hidden" asp-for="FullName" />
-
-    <div class="row g-4 mb-6">
-        <!-- User Info Card -->
-        <div class="col-lg-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="avatar avatar-info">
-                            <i class="bi bi-person-vcard"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-0 fw-semibold">User Details</h5>
-                            <p class="text-muted text-sm mb-0">Account information</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex flex-column gap-4">
-                        <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
-                            <span class="text-muted">
-                                <i class="bi bi-person me-2"></i>Username
-                            </span>
-                            <span class="fw-medium">@Model.UserName</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
-                            <span class="text-muted">
-                                <i class="bi bi-envelope me-2"></i>Email
-                            </span>
-                            <span class="fw-medium">@Model.Email</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
-                            <span class="text-muted">
-                                <i class="bi bi-card-text me-2"></i>Full Name
-                            </span>
-                            <span class="fw-medium">@Model.FullName</span>
-                        </div>
-                    </div>
-                </div>
+<div class="row g-4">
+    <!-- User Details -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">User Details</h5>
             </div>
-        </div>
-
-        <!-- Status Card -->
-        <div class="col-lg-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="avatar @(Model.IsActive ? "avatar-success" : "avatar-danger")">
-                            <i class="bi @(Model.IsActive ? "bi-toggle-on" : "bi-toggle-off")"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-0 fw-semibold">Account Status</h5>
-                            <p class="text-muted text-sm mb-0">Control user access</p>
-                        </div>
-                    </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <div class="text-muted text-xs mb-1">Full Name</div>
+                    <div class="font-medium">@Model.FullName</div>
                 </div>
-                <div class="card-body">
-                    <div class="p-4 rounded-3 mb-4" style="background: linear-gradient(135deg, @(Model.IsActive ? "var(--success-soft)" : "var(--danger-soft)") 0%, white 100%);">
-                        <div class="form-check form-switch d-flex justify-content-between align-items-center">
-                            <label class="form-check-label fw-semibold" for="statusSwitch">
-                                Account Active
-                            </label>
-                            <input class="form-check-input" 
-                                   type="checkbox" 
-                                   role="switch" 
-                                   id="statusSwitch" 
-                                   asp-for="IsActive"
-                                   style="width: 3.5em; height: 1.75em;"
-                                   onchange="updateStatusUI(this)">
-                        </div>
-                    </div>
-                    
-                    <div id="statusInfo" class="d-flex align-items-start gap-3 p-3 rounded-3 @(Model.IsActive ? "alert-soft-success" : "alert-soft-warning")">
-                        <i class="bi @(Model.IsActive ? "bi-check-circle text-success" : "bi-exclamation-triangle text-warning") fs-5"></i>
-                        <div>
-                            <div class="fw-medium @(Model.IsActive ? "text-success-emphasis" : "text-warning-emphasis")" id="statusTitle">
-                                @(Model.IsActive ? "Account is Active" : "Account is Disabled")
-                            </div>
-                            <div class="text-sm opacity-75" id="statusMessage">
-                                @(Model.IsActive ? "User can log in and access the system." : "User cannot log in until re-enabled.")
-                            </div>
-                        </div>
-                    </div>
+                <div class="mb-4">
+                    <div class="text-muted text-xs mb-1">Username</div>
+                    <code>@Model.UserName</code>
                 </div>
-            </div>
-        </div>
-
-        <!-- Quick Stats Card -->
-        <div class="col-lg-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="avatar avatar-primary">
-                            <i class="bi bi-bar-chart"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-0 fw-semibold">Access Summary</h5>
-                            <p class="text-muted text-sm mb-0">Role assignments</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body d-flex flex-column justify-content-center">
-                    <div class="text-center py-4">
-                        <div class="d-flex justify-content-center gap-5">
-                            <div>
-                                <div class="fs-1 fw-bold text-primary">@Model.SelectedRoles.Count</div>
-                                <div class="text-muted text-sm">Roles Assigned</div>
-                            </div>
-                            <div class="vr"></div>
-                            <div>
-                                <div class="fs-1 fw-bold text-info">@Model.GroupedRoles.Count</div>
-                                <div class="text-muted text-sm">Modules Access</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Roles Card -->
-    <div class="card mb-6">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-3">
-                <div class="avatar avatar-warning">
-                    <i class="bi bi-shield-check"></i>
+                <div class="mb-4">
+                    <div class="text-muted text-xs mb-1">Email</div>
+                    <div>@Model.Email</div>
                 </div>
                 <div>
-                    <h5 class="mb-0 fw-semibold">Assigned Roles</h5>
-                    <p class="text-muted text-sm mb-0">Select roles by module to grant access</p>
+                    <div class="text-muted text-xs mb-1">User ID</div>
+                    <code class="text-xs">@Model.Id</code>
                 </div>
             </div>
-            <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-light text-dark fs-6">@Model.GroupedRoles.Count modules</span>
-                <button type="button" class="btn btn-sm btn-light" onclick="expandAllAccordions()">
-                    <i class="bi bi-arrows-expand"></i> Expand All
-                </button>
+        </div>
+        
+        <!-- Summary -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title">Role Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Assigned Roles</span>
+                    <span class="font-semibold" id="assignedCount">@Model.SelectedRoles.Count</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Available Roles</span>
+                    <span>@(allRoles.Count - Model.SelectedRoles.Count)</span>
+                </div>
             </div>
         </div>
-        <div class="card-body">
-            @if (Model.GroupedRoles.Any())
-            {
-                <div class="accordion" id="rolesAccordion">
-                    @{ var moduleIndex = 0; }
-                    @foreach (var group in Model.GroupedRoles)
+    </div>
+    
+    <!-- Role Assignments -->
+    <div class="col-lg-8">
+        <form method="post" asp-action="Edit" id="roleForm">
+            <input type="hidden" asp-for="Id" />
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Role Assignments</h5>
+                    <div class="d-flex gap-2">
+                        <select id="moduleFilter" class="form-select form-control-sm" style="width: 180px;">
+                            <option value="">All Modules</option>
+                            @foreach (var module in Model.GroupedRoles.Keys.OrderBy(m => m))
+                            {
+                                <option value="@module">@module</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    @if (allRoles.Any())
                     {
-                        var groupId = "collapse" + group.Key.Replace(" ", "").Replace(".", "");
-                        var selectedCount = group.Value.Count(r => Model.SelectedRoles.Contains(r.Name));
-                        var isExpanded = selectedCount > 0;
-                        
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button @(!isExpanded ? "collapsed" : "")" 
-                                        type="button" 
-                                        data-bs-toggle="collapse" 
-                                        data-bs-target="#@groupId">
-                                    <div class="d-flex align-items-center gap-3 w-100 me-3">
-                                        <div class="avatar avatar-sm avatar-info">
-                                            <i class="bi bi-box-seam"></i>
-                                        </div>
-                                        <span class="fw-semibold">@group.Key</span>
-                                        <div class="ms-auto d-flex align-items-center gap-2">
-                                            @if (selectedCount > 0)
-                                            {
-                                                <span class="badge badge-soft-success">@selectedCount selected</span>
-                                            }
-                                            <span class="badge bg-light text-muted">@group.Value.Count roles</span>
-                                        </div>
-                                    </div>
-                                </button>
-                            </h2>
-                            <div id="@groupId" class="accordion-collapse collapse @(isExpanded ? "show" : "")" data-bs-parent="#rolesAccordion">
-                                <div class="accordion-body">
-                                    <div class="row g-3">
-                                        @foreach (var role in group.Value)
-                                        {
-                                            var isChecked = Model.SelectedRoles.Contains(role.Name);
-                                            <div class="col-md-6 col-lg-4">
-                                                <div class="form-check p-3 rounded-3 h-100 transition-all role-card @(isChecked ? "bg-primary bg-opacity-10 border border-primary border-opacity-25" : "bg-light border border-transparent")"
-                                                     onclick="toggleRoleCheckbox('role_@role.Name.Replace(" ", "_")')">
-                                                    <input type="checkbox" 
-                                                           class="form-check-input" 
-                                                           name="SelectedRoles" 
-                                                           id="role_@role.Name.Replace(" ", "_")" 
-                                                           value="@role.Name" 
-                                                           checked="@isChecked"
-                                                           onchange="updateRoleCardStyle(this)">
-                                                    <label class="form-check-label w-100 cursor-pointer" for="role_@role.Name.Replace(" ", "_")">
-                                                        <div class="d-flex align-items-start justify-content-between">
-                                                            <div>
-                                                                <div class="fw-semibold">@role.Name</div>
-                                                                @if (!string.IsNullOrEmpty(role.Description))
-                                                                {
-                                                                    <div class="text-muted text-xs mt-1 line-clamp-2">@role.Description</div>
-                                                                }
-                                                            </div>
-                                                            @if (isChecked)
-                                                            {
-                                                                <i class="bi bi-check-circle-fill text-primary"></i>
-                                                            }
-                                                        </div>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
+                        <table class="table mb-0" id="rolesTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;"></th>
+                                    <th>Role</th>
+                                    <th>Module</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var role in allRoles)
+                                {
+                                    var isAssigned = Model.SelectedRoles.Contains(role.Name);
+                                    <tr data-module="@role.Module">
+                                        <td class="text-center">
+                                            <input type="checkbox" 
+                                                   name="SelectedRoles"
+                                                   value="@role.Name"
+                                                   class="form-check-input role-checkbox"
+                                                   @(isAssigned ? "checked" : "") />
+                                        </td>
+                                        <td>
+                                            <span class="font-medium">@role.Name</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-gray">@role.Module</span>
+                                        </td>
+                                        <td class="text-muted text-sm">
+                                            @(string.IsNullOrEmpty(role.Description) ? "—" : role.Description)
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="bi bi-person-badge empty-state-icon"></i>
+                            <h5 class="empty-state-title">No roles available</h5>
+                            <p class="empty-state-text">Create roles first to assign them to users.</p>
+                            <a asp-controller="Roles" asp-action="Index" class="btn btn-secondary">
+                                Manage Roles
+                            </a>
                         </div>
-                        moduleIndex++;
                     }
                 </div>
-            }
-            else
-            {
-                <div class="empty-state py-6">
-                    <div class="avatar avatar-xl avatar-warning mx-auto mb-4">
-                        <i class="bi bi-shield-x fs-3"></i>
+                @if (allRoles.Any())
+                {
+                    <div class="card-footer d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check"></i> Save Changes
+                        </button>
                     </div>
-                    <h5 class="empty-state-title">No Roles Available</h5>
-                    <p class="empty-state-text">Create roles first to assign them to this user.</p>
-                    <a asp-controller="Roles" asp-action="Index" class="btn btn-primary">
-                        <i class="bi bi-plus-lg"></i> Create Roles
-                    </a>
-                </div>
-            }
-        </div>
-    </div>
-
-    <!-- Floating Action Bar -->
-    <div class="fixed-bottom bg-white border-top py-4" style="z-index: 1000; left: 280px; box-shadow: 0 -4px 24px rgba(0,0,0,0.08);">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2 text-muted">
-                <i class="bi bi-info-circle"></i>
-                <span class="text-sm">Changes are applied immediately upon save</span>
+                }
             </div>
-            <div class="d-flex gap-3">
-                <a asp-action="Index" class="btn btn-secondary">
-                    <i class="bi bi-x-lg"></i> Cancel
-                </a>
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="bi bi-check-lg"></i> Save Changes
-                </button>
-            </div>
-        </div>
+        </form>
     </div>
-</form>
-
-<style>
-    /* Adjust main content for floating footer */
-    .main-content { padding-bottom: 120px; }
-    
-    .role-card {
-        cursor: pointer;
-    }
-    
-    .role-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-</style>
+</div>
 
 @section Scripts {
     <script>
-        function updateStatusUI(checkbox) {
-            const statusInfo = document.getElementById('statusInfo');
-            const statusTitle = document.getElementById('statusTitle');
-            const statusMessage = document.getElementById('statusMessage');
-            const icon = statusInfo.querySelector('i');
+        // Module filter
+        document.getElementById('moduleFilter').addEventListener('change', function() {
+            const module = this.value;
+            const rows = document.querySelectorAll('#rolesTable tbody tr');
             
-            if (checkbox.checked) {
-                statusInfo.className = 'd-flex align-items-start gap-3 p-3 rounded-3 alert-soft-success';
-                icon.className = 'bi bi-check-circle text-success fs-5';
-                statusTitle.textContent = 'Account is Active';
-                statusTitle.className = 'fw-medium text-success-emphasis';
-                statusMessage.textContent = 'User can log in and access the system.';
-            } else {
-                statusInfo.className = 'd-flex align-items-start gap-3 p-3 rounded-3 alert-soft-warning';
-                icon.className = 'bi bi-exclamation-triangle text-warning fs-5';
-                statusTitle.textContent = 'Account is Disabled';
-                statusTitle.className = 'fw-medium text-warning-emphasis';
-                statusMessage.textContent = 'User cannot log in until re-enabled.';
-            }
-        }
-
-        function toggleRoleCheckbox(checkboxId) {
-            const checkbox = document.getElementById(checkboxId);
-            checkbox.checked = !checkbox.checked;
-            updateRoleCardStyle(checkbox);
-        }
-
-        function updateRoleCardStyle(checkbox) {
-            const card = checkbox.closest('.role-card');
-            const checkIcon = card.querySelector('.bi-check-circle-fill');
-            
-            if (checkbox.checked) {
-                card.classList.add('bg-primary', 'bg-opacity-10', 'border-primary', 'border-opacity-25');
-                card.classList.remove('bg-light', 'border-transparent');
-                if (!checkIcon) {
-                    const iconWrapper = card.querySelector('.d-flex.align-items-start');
-                    const icon = document.createElement('i');
-                    icon.className = 'bi bi-check-circle-fill text-primary';
-                    iconWrapper.appendChild(icon);
+            rows.forEach(row => {
+                if (!module || row.dataset.module === module) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
                 }
-            } else {
-                card.classList.remove('bg-primary', 'bg-opacity-10', 'border-primary', 'border-opacity-25');
-                card.classList.add('bg-light', 'border-transparent');
-                if (checkIcon) {
-                    checkIcon.remove();
-                }
-            }
-        }
-
-        function expandAllAccordions() {
-            document.querySelectorAll('.accordion-collapse').forEach(function(collapse) {
-                var bsCollapse = new bootstrap.Collapse(collapse, { toggle: false });
-                bsCollapse.show();
             });
-            document.querySelectorAll('.accordion-button').forEach(function(btn) {
-                btn.classList.remove('collapsed');
-            });
+        });
+        
+        // Update assigned count
+        function updateCount() {
+            const count = document.querySelectorAll('.role-checkbox:checked').length;
+            document.getElementById('assignedCount').textContent = count;
         }
+        
+        document.querySelectorAll('.role-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateCount);
+        });
     </script>
 }

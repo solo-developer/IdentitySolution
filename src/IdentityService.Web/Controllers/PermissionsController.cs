@@ -37,35 +37,37 @@ public class PermissionsController : Controller
             .OrderBy(m => m)
             .ToListAsync();
 
-        // Query permissions
-        var query = _context.Permissions.AsQueryable();
-
+        // Only query permissions when a module is selected
         if (!string.IsNullOrEmpty(module))
         {
-            query = query.Where(p => p.Module == module);
-        }
+            var query = _context.Permissions.Where(p => p.Module == module);
 
-        if (status == "active")
-        {
-            query = query.Where(p => p.IsActive);
-        }
-        else if (status == "inactive")
-        {
-            query = query.Where(p => !p.IsActive);
-        }
-
-        model.Permissions = await query
-            .OrderBy(p => p.Module)
-            .ThenBy(p => p.Name)
-            .Select(p => new PermissionViewModel
+            if (status == "active")
             {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Module = p.Module,
-                IsActive = p.IsActive
-            })
-            .ToListAsync();
+                query = query.Where(p => p.IsActive);
+            }
+            else if (status == "inactive")
+            {
+                query = query.Where(p => !p.IsActive);
+            }
+
+            model.Permissions = await query
+                .OrderBy(p => p.Name)
+                .Select(p => new PermissionViewModel
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Module = p.Module,
+                    IsActive = p.IsActive
+                })
+                .ToListAsync();
+        }
+        else
+        {
+            // No module selected - return empty list
+            model.Permissions = new List<PermissionViewModel>();
+        }
 
         return View(model);
     }

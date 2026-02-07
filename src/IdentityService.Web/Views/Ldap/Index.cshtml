@@ -5,114 +5,71 @@
 
 <div class="page-header">
     <div>
-        <a asp-controller="Users" asp-action="Index" class="text-muted text-sm d-inline-flex align-items-center gap-1 mb-2 text-decoration-none">
-            <i class="bi bi-arrow-left"></i> Back to Users
-        </a>
-        <h1 class="page-title">
-            <i class="bi bi-diagram-2 text-primary me-2"></i>
-            LDAP Synchronization
-        </h1>
-        <p class="page-subtitle">Import users from Active Directory</p>
+        <h1 class="page-title">LDAP Synchronization</h1>
+        <p class="page-description">Import users from Active Directory</p>
     </div>
-    <div class="d-flex gap-2">
-        <a asp-action="Configure" class="btn btn-outline-primary">
-            <i class="bi bi-gear"></i> Configure
-        </a>
-    </div>
+    <a asp-action="Configure" class="btn btn-secondary">
+        <i class="bi bi-gear"></i> Configure
+    </a>
 </div>
 
 @if (!string.IsNullOrEmpty(Model.Message))
 {
     var isError = Model.Message.Contains("Error") || Model.Message.Contains("failed");
-    <div class="alert @(isError ? "alert-soft-danger" : "alert-soft-success") mb-5 d-flex align-items-center gap-3" role="alert">
-        <i class="bi @(isError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill") fs-4"></i>
-        <div>
-            <div class="fw-medium">@(isError ? "Sync Failed" : "Sync Successful")</div>
-            <div class="text-sm opacity-75">@Model.Message</div>
-        </div>
+    <div class="alert @(isError ? "alert-danger" : "alert-success") mb-4">
+        <i class="bi @(isError ? "bi-exclamation-circle" : "bi-check-circle")"></i>
+        <span>@Model.Message</span>
     </div>
 }
 
 <div class="row g-4">
-    <!-- Sync Status Card -->
+    <!-- Sync Status -->
     <div class="col-lg-4">
-        <div class="card h-100">
+        <div class="card">
             <div class="card-header">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="avatar avatar-primary">
-                        <i class="bi bi-cloud-arrow-down"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-0 fw-semibold">Sync Status</h5>
-                        <p class="text-muted text-sm mb-0">LDAP import summary</p>
-                    </div>
-                </div>
+                <h5 class="card-title">Sync Status</h5>
             </div>
             <div class="card-body">
-                <!-- Stats -->
-                <div class="d-flex flex-column gap-4 mb-5">
-                    <div class="p-4 rounded-3 text-center" style="background: linear-gradient(135deg, var(--primary-soft) 0%, white 100%);">
-                        <div class="fs-1 fw-bold text-primary">@Model.Users.Count</div>
-                        <div class="text-muted text-sm">Total Users Found</div>
+                <div class="stat-card mb-4" style="border: none; padding: 0;">
+                    <div class="stat-label">Users Found</div>
+                    <div class="stat-value">@Model.Users.Count</div>
+                </div>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="text-muted text-xs mb-1">New</div>
+                        <div class="font-semibold" style="color: var(--success);">@Model.NewUsersCount</div>
                     </div>
-                    
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <div class="p-3 rounded-3 text-center" style="background: var(--success-soft);">
-                                <div class="fs-4 fw-bold" style="color: var(--success);">@Model.NewUsersCount</div>
-                                <div class="text-xs text-muted">New Users</div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 rounded-3 text-center" style="background: var(--gray-100);">
-                                <div class="fs-4 fw-bold text-muted">@Model.ExistingUsersCount</div>
-                                <div class="text-xs text-muted">Existing</div>
-                            </div>
-                        </div>
+                    <div class="col-6">
+                        <div class="text-muted text-xs mb-1">Existing</div>
+                        <div class="font-semibold">@Model.ExistingUsersCount</div>
                     </div>
                 </div>
                 
-                <!-- Sync Button -->
                 <form method="post" asp-action="Sync">
-                    <button type="submit" class="btn btn-primary btn-lg w-100" @(Model.Users.Count == 0 ? "disabled" : "")>
-                        <i class="bi bi-arrow-repeat me-2"></i> Sync Now
+                    <button type="submit" class="btn btn-primary w-100" @(Model.Users.Count == 0 ? "disabled" : "")>
+                        <i class="bi bi-arrow-repeat"></i> Sync Now
                     </button>
                 </form>
-                
-                @if (Model.Users.Count == 0)
-                {
-                    <div class="text-center mt-3 text-muted text-sm">
-                        <i class="bi bi-info-circle me-1"></i>
-                        No users to sync. Check LDAP configuration.
-                    </div>
-                }
             </div>
         </div>
     </div>
     
-    <!-- Preview Users -->
+    <!-- Preview -->
     <div class="col-lg-8">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="avatar avatar-info">
-                        <i class="bi bi-people"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-0 fw-semibold">Preview Users</h5>
-                        <p class="text-muted text-sm mb-0">Users found in LDAP directory</p>
-                    </div>
-                </div>
-                <span class="badge bg-light text-dark">@Model.Users.Count users</span>
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Preview</h5>
+                <span class="text-muted text-sm">@Model.Users.Count users</span>
             </div>
             <div class="card-body p-0">
                 @if (Model.Users.Any())
                 {
-                    <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
-                        <table class="table table-hover mb-0">
-                            <thead style="position: sticky; top: 0; z-index: 10;">
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="table mb-0">
+                            <thead style="position: sticky; top: 0; background: var(--gray-50);">
                                 <tr>
-                                    <th>User</th>
+                                    <th>Username</th>
                                     <th>Email</th>
                                     <th>Status</th>
                                 </tr>
@@ -122,39 +79,22 @@
                                 {
                                     var isNew = user.Status == "New" || user.Status == "Created";
                                     var isError = user.Status?.Contains("Error") ?? false;
-                                    var initials = !string.IsNullOrEmpty(user.UserName) && user.UserName.Length > 0 
-                                        ? user.UserName.Substring(0, 1).ToUpper() 
-                                        : "?";
                                     
                                     <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-3">
-                                                <div class="avatar avatar-sm @(isNew ? "avatar-success" : (isError ? "avatar-danger" : ""))" 
-                                                     style="@(!isNew && !isError ? "background-color: var(--gray-100); color: var(--gray-500);" : "")">
-                                                    @initials
-                                                </div>
-                                                <span class="fw-medium">@user.UserName</span>
-                                            </div>
-                                        </td>
+                                        <td class="font-medium">@user.UserName</td>
                                         <td class="text-muted">@user.Email</td>
                                         <td>
                                             @if (isNew)
                                             {
-                                                <span class="badge badge-soft-success">
-                                                    <i class="bi bi-plus-circle me-1"></i>@user.Status
-                                                </span>
+                                                <span class="badge badge-success">New</span>
                                             }
                                             else if (isError)
                                             {
-                                                <span class="badge badge-soft-danger">
-                                                    <i class="bi bi-exclamation-circle me-1"></i>@user.Status
-                                                </span>
+                                                <span class="badge badge-danger">Error</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-light text-muted">
-                                                    <i class="bi bi-check me-1"></i>@user.Status
-                                                </span>
+                                                <span class="badge badge-gray">Existing</span>
                                             }
                                         </td>
                                     </tr>
@@ -166,46 +106,12 @@
                 else
                 {
                     <div class="empty-state">
-                        <div class="avatar avatar-xl avatar-warning mx-auto mb-4">
-                            <i class="bi bi-diagram-2 fs-3"></i>
-                        </div>
-                        <h5 class="empty-state-title">No Users Found</h5>
-                        <p class="empty-state-text">
-                            No users were found in the LDAP directory, or the connection is not configured.
-                        </p>
-                        <a asp-action="Configure" class="btn btn-primary">
-                            <i class="bi bi-gear"></i> Configure LDAP
-                        </a>
+                        <i class="bi bi-diagram-2 empty-state-icon"></i>
+                        <h5 class="empty-state-title">No users found</h5>
+                        <p class="empty-state-text">Configure LDAP connection to discover users.</p>
+                        <a asp-action="Configure" class="btn btn-secondary">Configure LDAP</a>
                     </div>
                 }
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Help Info -->
-<div class="card mt-5">
-    <div class="card-body">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="avatar avatar-info">
-                        <i class="bi bi-lightbulb"></i>
-                    </div>
-                    <div>
-                        <h6 class="fw-semibold mb-1">How LDAP Sync Works</h6>
-                        <p class="text-muted text-sm mb-0">
-                            LDAP synchronization imports user accounts from your Active Directory. New users will be created in the system, 
-                            while existing users (matched by username or email) will be skipped. After syncing, you can assign roles to 
-                            imported users from the Users management page.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <a asp-action="Configure" class="btn btn-outline-secondary">
-                    <i class="bi bi-gear me-1"></i> LDAP Settings
-                </a>
             </div>
         </div>
     </div>

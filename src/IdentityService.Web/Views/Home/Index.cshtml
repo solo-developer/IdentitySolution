@@ -5,346 +5,125 @@
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">
-            <i class="bi bi-speedometer2 text-primary me-2"></i>
-            Dashboard
-        </h1>
-        <p class="page-subtitle">Identity & Access Management Overview</p>
-    </div>
-    <div class="d-flex gap-2">
-        <a asp-controller="Users" asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Add User
-        </a>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-description">System overview and quick access to administration tasks</p>
     </div>
 </div>
 
-<!-- Stats Row -->
-<div class="row g-4 mb-6">
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card border-0 h-100 hover-lift">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="stat-label mb-2">Total Users</p>
-                        <h2 class="stat-value">@Model.TotalUsers</h2>
-                        <div class="mt-3">
-                            <span class="badge badge-soft-success">
-                                <i class="bi bi-check-circle me-1"></i>@Model.ActiveUsers active
-                            </span>
-                        </div>
-                    </div>
-                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                </div>
-            </div>
+<!-- Stats Grid -->
+<div class="stat-grid" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value">@Model.TotalUsers</div>
+        <div class="stat-meta">
+            <span style="color: var(--success);">@Model.ActiveUsers active</span> · 
+            <span class="text-muted">@Model.InactiveUsers inactive</span>
         </div>
     </div>
-    
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card border-0 h-100 hover-lift">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="stat-label mb-2">Total Roles</p>
-                        <h2 class="stat-value">@Model.TotalRoles</h2>
-                        <div class="mt-3">
-                            <span class="text-muted text-sm">
-                                <i class="bi bi-box-seam me-1"></i>Across @Model.TotalModules modules
-                            </span>
-                        </div>
-                    </div>
-                    <div class="stat-icon" style="background-color: var(--success-soft); color: var(--success);">
-                        <i class="bi bi-shield-check"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="stat-card">
+        <div class="stat-label">Roles</div>
+        <div class="stat-value">@Model.TotalRoles</div>
+        <div class="stat-meta">Across @Model.TotalModules modules</div>
     </div>
-    
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card border-0 h-100 hover-lift">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="stat-label mb-2">Permissions</p>
-                        <h2 class="stat-value">@Model.TotalPermissions</h2>
-                        <div class="mt-3">
-                            <span class="text-muted text-sm">
-                                <i class="bi bi-lock me-1"></i>System-wide controls
-                            </span>
-                        </div>
-                    </div>
-                    <div class="stat-icon" style="background-color: var(--warning-soft); color: var(--warning);">
-                        <i class="bi bi-key-fill"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="stat-card">
+        <div class="stat-label">Permissions</div>
+        <div class="stat-value">@Model.TotalPermissions</div>
+        <div class="stat-meta">Active permissions</div>
     </div>
-    
-    <div class="col-sm-6 col-xl-3">
-        <div class="card stat-card border-0 h-100 hover-lift">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="stat-label mb-2">Inactive Users</p>
-                        <h2 class="stat-value" style="color: @(Model.InactiveUsers > 0 ? "var(--danger)" : "var(--gray-400)");">@Model.InactiveUsers</h2>
-                        <div class="mt-3">
-                            @if (Model.InactiveUsers > 0)
-                            {
-                                <span class="badge badge-soft-danger">
-                                    <i class="bi bi-exclamation-circle me-1"></i>Needs attention
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="text-muted text-sm">
-                                    <i class="bi bi-check-circle me-1"></i>All accounts active
-                                </span>
-                            }
-                        </div>
-                    </div>
-                    <div class="stat-icon" style="background-color: @(Model.InactiveUsers > 0 ? "var(--danger-soft)" : "var(--gray-100)"); color: @(Model.InactiveUsers > 0 ? "var(--danger)" : "var(--gray-400)");">
-                        <i class="bi bi-person-x-fill"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="stat-card">
+        <div class="stat-label">Modules</div>
+        <div class="stat-value">@Model.TotalModules</div>
+        <div class="stat-meta">Registered services</div>
     </div>
 </div>
 
-<!-- Main Content Row -->
 <div class="row g-4">
     <!-- Quick Actions -->
     <div class="col-lg-4">
-        <div class="card h-100">
-            <div class="card-header d-flex align-items-center gap-3">
-                <div class="avatar avatar-primary">
-                    <i class="bi bi-lightning-charge-fill"></i>
-                </div>
-                <div>
-                    <h5 class="mb-0 fw-semibold">Quick Actions</h5>
-                    <p class="text-muted text-sm mb-0">Common tasks</p>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-3">
-                    <a asp-controller="Users" asp-action="Create" class="btn btn-light text-start py-3 hover-lift">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar avatar-sm avatar-primary me-3">
-                                <i class="bi bi-person-plus"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="fw-semibold">Add New User</div>
-                                <div class="text-muted text-xs">Create a new account</div>
-                            </div>
-                            <i class="bi bi-chevron-right text-muted"></i>
-                        </div>
-                    </a>
-                    <a asp-controller="Roles" asp-action="Index" class="btn btn-light text-start py-3 hover-lift">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar avatar-sm avatar-success me-3">
-                                <i class="bi bi-shield-plus"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="fw-semibold">Manage Roles</div>
-                                <div class="text-muted text-xs">Configure access levels</div>
-                            </div>
-                            <i class="bi bi-chevron-right text-muted"></i>
-                        </div>
-                    </a>
-                    <a asp-controller="Permissions" asp-action="Index" class="btn btn-light text-start py-3 hover-lift">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar avatar-sm avatar-warning me-3">
-                                <i class="bi bi-key"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="fw-semibold">Permissions</div>
-                                <div class="text-muted text-xs">Granular access controls</div>
-                            </div>
-                            <i class="bi bi-chevron-right text-muted"></i>
-                        </div>
-                    </a>
-                    <a asp-controller="RolePermission" asp-action="Index" class="btn btn-light text-start py-3 hover-lift">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar avatar-sm avatar-info me-3">
-                                <i class="bi bi-diagram-3"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="fw-semibold">Role Mapping</div>
-                                <div class="text-muted text-xs">Assign permissions to roles</div>
-                            </div>
-                            <i class="bi bi-chevron-right text-muted"></i>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Roles by Module -->
-    <div class="col-lg-8">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="avatar avatar-success">
-                        <i class="bi bi-diagram-3"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-0 fw-semibold">Roles by Module</h5>
-                        <p class="text-muted text-sm mb-0">Service distribution overview</p>
-                    </div>
-                </div>
-                <a asp-controller="Roles" asp-action="Index" class="btn btn-sm btn-primary">
-                    <i class="bi bi-arrow-right"></i> View All
-                </a>
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Quick Actions</h5>
             </div>
             <div class="card-body p-0">
-                @if (Model.RolesByModule.Any())
-                {
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Module</th>
-                                    <th>Roles</th>
-                                    <th class="text-end">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var module in Model.RolesByModule)
-                                {
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-3">
-                                                <div class="avatar avatar-sm avatar-info">
-                                                    <i class="bi bi-box-seam"></i>
-                                                </div>
-                                                <span class="fw-medium">@module.Key</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <div class="progress flex-grow-1" style="height: 6px; max-width: 100px;">
-                                                    <div class="progress-bar bg-primary" style="width: @(Model.TotalRoles > 0 ? (module.Value * 100 / Model.TotalRoles) : 0)%"></div>
-                                                </div>
-                                                <span class="badge badge-soft-primary">@module.Value</span>
-                                            </div>
-                                        </td>
-                                        <td class="text-end">
-                                            <a asp-controller="Roles" asp-action="Index" asp-route-module="@module.Key" class="btn btn-sm btn-light">
-                                                Manage <i class="bi bi-arrow-right ms-1"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                <a asp-controller="Users" asp-action="Create" class="d-flex align-items-center gap-3 p-3 border-bottom text-decoration-none" style="color: inherit;">
+                    <i class="bi bi-person-plus text-primary" style="font-size: 1.25rem;"></i>
+                    <div>
+                        <div class="font-medium">Create User</div>
+                        <div class="text-muted text-xs">Add a new user account</div>
                     </div>
-                }
-                else
-                {
-                    <div class="empty-state">
-                        <div class="avatar avatar-xl avatar-primary mx-auto mb-4">
-                            <i class="bi bi-inbox fs-3"></i>
-                        </div>
-                        <h5 class="empty-state-title">No Roles Configured</h5>
-                        <p class="empty-state-text">Start by creating roles for your service modules.</p>
-                        <a asp-controller="Roles" asp-action="Index" class="btn btn-primary">
-                            <i class="bi bi-plus-lg"></i> Create Role
-                        </a>
+                </a>
+                <a asp-controller="Roles" asp-action="Index" class="d-flex align-items-center gap-3 p-3 border-bottom text-decoration-none" style="color: inherit;">
+                    <i class="bi bi-person-badge text-primary" style="font-size: 1.25rem;"></i>
+                    <div>
+                        <div class="font-medium">Manage Roles</div>
+                        <div class="text-muted text-xs">Configure role assignments</div>
                     </div>
-                }
+                </a>
+                <a asp-controller="Permissions" asp-action="Index" class="d-flex align-items-center gap-3 p-3 border-bottom text-decoration-none" style="color: inherit;">
+                    <i class="bi bi-key text-primary" style="font-size: 1.25rem;"></i>
+                    <div>
+                        <div class="font-medium">Permissions</div>
+                        <div class="text-muted text-xs">Define access controls</div>
+                    </div>
+                </a>
+                <a asp-controller="Ldap" asp-action="Index" class="d-flex align-items-center gap-3 p-3 text-decoration-none" style="color: inherit;">
+                    <i class="bi bi-diagram-2 text-primary" style="font-size: 1.25rem;"></i>
+                    <div>
+                        <div class="font-medium">LDAP Sync</div>
+                        <div class="text-muted text-xs">Import from Active Directory</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Roles by Module -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Roles by Module</h5>
+                <a asp-controller="Roles" asp-action="Index" class="btn btn-sm btn-secondary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Module</th>
+                            <th style="width: 100px;">Roles</th>
+                            <th style="width: 120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var module in Model.RolesByModule.OrderByDescending(m => m.Value))
+                        {
+                            <tr>
+                                <td>
+                                    <span class="font-medium">@module.Key</span>
+                                </td>
+                                <td>@module.Value</td>
+                                <td>
+                                    <a asp-controller="Roles" asp-action="Index" asp-route-module="@module.Key" 
+                                       class="btn btn-sm btn-ghost" data-bs-toggle="tooltip" title="View roles">
+                                        <i class="bi bi-person-badge"></i>
+                                    </a>
+                                    <a asp-controller="Permissions" asp-action="Index" asp-route-module="@module.Key" 
+                                       class="btn btn-sm btn-ghost" data-bs-toggle="tooltip" title="View permissions">
+                                        <i class="bi bi-key"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.RolesByModule.Any())
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">No modules found</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<!-- System Info -->
-<div class="row mt-5">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="avatar" style="background-color: var(--gray-100); color: var(--gray-600);">
-                        <i class="bi bi-info-circle"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-0 fw-semibold">System Information</h5>
-                        <p class="text-muted text-sm mb-0">Service configuration & infrastructure</p>
-                    </div>
-                </div>
-                <a asp-controller="Modules" asp-action="Index" class="btn btn-sm btn-secondary">
-                    <i class="bi bi-grid-3x3-gap"></i> View Modules
-                </a>
-            </div>
-            <div class="card-body">
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <div class="p-4 rounded-3 h-100" style="background: linear-gradient(135deg, var(--primary-soft) 0%, white 100%);">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="avatar avatar-sm avatar-primary">
-                                    <i class="bi bi-shield-lock"></i>
-                                </div>
-                                <h6 class="fw-semibold mb-0">Identity Service</h6>
-                            </div>
-                            <div class="d-flex flex-column gap-2">
-                                <div class="d-flex justify-content-between text-sm">
-                                    <span class="text-muted">Version</span>
-                                    <span class="fw-medium">1.0.0</span>
-                                </div>
-                                <div class="d-flex justify-content-between text-sm">
-                                    <span class="text-muted">Environment</span>
-                                    <span class="badge badge-soft-info">@Model.Environment</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="p-4 rounded-3 h-100" style="background: linear-gradient(135deg, var(--success-soft) 0%, white 100%);">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="avatar avatar-sm avatar-success">
-                                    <i class="bi bi-broadcast"></i>
-                                </div>
-                                <h6 class="fw-semibold mb-0">Event Bus</h6>
-                            </div>
-                            <div class="d-flex flex-column gap-2">
-                                <div class="d-flex justify-content-between text-sm">
-                                    <span class="text-muted">Provider</span>
-                                    <span class="fw-medium">RabbitMQ</span>
-                                </div>
-                                <div class="d-flex justify-content-between text-sm">
-                                    <span class="text-muted">Framework</span>
-                                    <span class="fw-medium">MassTransit</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="p-4 rounded-3 h-100" style="background: linear-gradient(135deg, var(--warning-soft) 0%, white 100%);">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="avatar avatar-sm avatar-warning">
-                                    <i class="bi bi-person-badge"></i>
-                                </div>
-                                <h6 class="fw-semibold mb-0">Authentication</h6>
-                            </div>
-                            <div class="d-flex flex-column gap-2">
-                                <div class="d-flex justify-content-between text-sm">
-                                    <span class="text-muted">Provider</span>
-                                    <span class="fw-medium">OpenIddict</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center text-sm">
-                                    <span class="text-muted">API Docs</span>
-                                    <a href="/swagger" target="_blank" class="text-primary fw-medium text-decoration-none">
-                                        Swagger <i class="bi bi-box-arrow-up-right ms-1"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+

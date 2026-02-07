@@ -1,221 +1,192 @@
 @model IdentityService.Web.ViewModels.RoleIndexViewModel
 @{
-    ViewData["Title"] = "Role Management";
+    ViewData["Title"] = "Roles";
 }
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">
-            <i class="bi bi-person-badge text-primary me-2"></i>
-            Roles & Modules
-        </h1>
-        <p class="page-subtitle">Define and manage role-based access for your services</p>
+        <h1 class="page-title">Roles</h1>
+        <p class="page-description">Manage roles and their module assignments</p>
     </div>
     @if (!string.IsNullOrEmpty(Model.Module))
     {
-        <span class="badge badge-soft-primary fs-6 px-3 py-2">
-            <i class="bi bi-box-seam me-1"></i> @Model.Module
-        </span>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRoleModal">
+            <i class="bi bi-plus"></i> Add Role
+        </button>
     }
 </div>
 
 <!-- Module Selector -->
-<div class="card mb-6">
-    <div class="card-body">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <div class="d-flex align-items-center gap-4">
-                    <div class="avatar avatar-xl avatar-primary">
-                        <i class="bi bi-box-seam fs-4"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <label class="section-title mb-2">Service Module</label>
-                        <select class="form-select form-select-lg" id="moduleSelector" 
-                                onchange="window.location.href='?module=' + this.value" 
-                                @(Model.IsModuleReadOnly ? "disabled" : "")>
-                            <option value="">-- Select a Module --</option>
-                            @foreach (var mod in Model.Modules)
-                            {
-                                <option value="@mod" selected="@(Model.Module == mod)">@mod</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 mt-4 mt-lg-0">
-                @if (Model.IsModuleReadOnly && !string.IsNullOrEmpty(Model.Module))
-                {
-                    <div class="alert alert-soft-warning mb-0 d-flex align-items-center gap-3">
-                        <i class="bi bi-lock-fill fs-4"></i>
-                        <div>
-                            <strong class="d-block">Context Locked</strong>
-                            <span class="text-sm opacity-75">Module selection restricted by referrer</span>
-                        </div>
-                    </div>
-                }
-                else if (string.IsNullOrEmpty(Model.Module))
-                {
-                    <div class="d-flex align-items-start gap-3 p-4 rounded-3" style="background: var(--info-soft);">
-                        <i class="bi bi-lightbulb fs-4 text-info"></i>
-                        <div>
-                            <div class="fw-medium text-info-emphasis">Module-Scoped Roles</div>
-                            <div class="text-sm" style="color: #1e40af;">
-                                Roles are scoped to specific microservices. Select a module to view or create roles for that service context.
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted text-sm">Module:</span>
+            <form method="get" asp-action="Index" id="moduleForm">
+                <select name="module" class="form-select form-control-sm" style="width: 200px;" onchange="this.form.submit()" @(Model.IsModuleReadOnly ? "disabled" : "")>
+                    <option value="">Select a module</option>
+                    @foreach (var module in Model.Modules)
+                    {
+                        <option value="@module" selected="@(module == Model.Module)">@module</option>
+                    }
+                </select>
+            </form>
+            @if (!string.IsNullOrEmpty(Model.Module))
+            {
+                <span class="text-muted text-sm ms-auto">
+                    <strong>@Model.Roles.Count</strong> roles in <strong>@Model.Module</strong>
+                </span>
+            }
         </div>
     </div>
 </div>
 
-@if (!string.IsNullOrEmpty(Model.Module))
+@if (string.IsNullOrEmpty(Model.Module))
 {
-    <div class="row g-4">
-        <!-- Create Role Form -->
-        <div class="col-lg-4">
-            <div class="card h-100" style="border: 2px solid var(--primary); border-style: dashed;">
-                <div class="card-header" style="background: linear-gradient(135deg, var(--primary-soft) 0%, white 100%);">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="avatar avatar-success">
-                            <i class="bi bi-plus-lg"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-0 fw-semibold">Create Role</h5>
-                            <p class="text-muted text-sm mb-0">Add new role to @Model.Module</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    @if (!ViewData.ModelState.IsValid)
-                    {
-                        <div asp-validation-summary="All" class="alert alert-soft-danger mb-4 text-sm" role="alert"></div>
-                    }
-
-                    <form method="post" asp-action="Create">
-                        <input type="hidden" asp-for="CreateRoleInput.Module" value="@Model.Module" />
-                        
-                        <div class="mb-4">
-                            <label class="form-label fw-medium">
-                                <i class="bi bi-tag me-1 text-muted"></i>Role Name
-                            </label>
-                            <input asp-for="CreateRoleInput.Name" class="form-control" placeholder="e.g. ApprovalManager" required />
-                            <div class="form-text">Use PascalCase naming convention</div>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label class="form-label fw-medium">
-                                <i class="bi bi-text-paragraph me-1 text-muted"></i>Description
-                            </label>
-                            <textarea asp-for="CreateRoleInput.Description" class="form-control" rows="3" placeholder="Describe this role's purpose..."></textarea>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-plus-lg"></i> Create Role
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Roles List -->
-        <div class="col-lg-8">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="avatar avatar-primary">
-                            <i class="bi bi-list-check"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-0 fw-semibold">Active Roles</h5>
-                            <p class="text-muted text-sm mb-0">Manage permissions for existing roles</p>
-                        </div>
-                    </div>
-                    <span class="badge bg-light text-dark fs-6">@Model.Roles.Count roles</span>
-                </div>
-                <div class="card-body p-0">
-                    @if (Model.Roles.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Role</th>
-                                        <th>Permissions</th>
-                                        <th class="text-end">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var role in Model.Roles)
-                                    {
-                                        var permCount = role.Permissions?.Count ?? 0;
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center gap-3">
-                                                    <div class="avatar avatar-sm" style="background-color: var(--gray-100); color: var(--gray-600);">
-                                                        <i class="bi bi-person-badge"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="fw-semibold">@role.Name</div>
-                                                        <div class="text-muted text-sm line-clamp-2">@role.Description</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    @if (permCount > 0)
-                                                    {
-                                                        <span class="badge badge-soft-success">
-                                                            <i class="bi bi-key me-1"></i>@permCount
-                                                        </span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="badge bg-light text-muted">
-                                                            <i class="bi bi-key me-1"></i>None
-                                                        </span>
-                                                    }
-                                                </div>
-                                            </td>
-                                            <td class="text-end">
-                                                <a asp-controller="RolePermission" asp-action="Index" 
-                                                   asp-route-module="@Model.Module" 
-                                                   asp-route-roleId="@role.Id" 
-                                                   class="btn btn-sm btn-primary">
-                                                    <i class="bi bi-gear me-1"></i>Configure
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="empty-state">
-                            <div class="avatar avatar-xl avatar-warning mx-auto mb-4">
-                                <i class="bi bi-shield-x fs-3"></i>
-                            </div>
-                            <h5 class="empty-state-title">No Roles Yet</h5>
-                            <p class="empty-state-text">Create your first role for this module using the form on the left.</p>
-                        </div>
-                    }
-                </div>
-            </div>
+    <div class="card">
+        <div class="empty-state">
+            <i class="bi bi-hdd-stack empty-state-icon"></i>
+            <h5 class="empty-state-title">Select a Module</h5>
+            <p class="empty-state-text">Choose a module from the dropdown above to view and manage its roles.</p>
         </div>
     </div>
 }
 else
 {
-    <div class="card border-dashed" style="border-style: dashed; border-width: 2px;">
-        <div class="empty-state">
-            <div class="avatar avatar-xl avatar-primary mx-auto mb-4">
-                <i class="bi bi-box-seam fs-3"></i>
-            </div>
-            <h5 class="empty-state-title">Select a Module</h5>
-            <p class="empty-state-text">Choose a service module above to manage its roles and permissions.</p>
+    <!-- Roles Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            @if (Model.Roles.Any())
+            {
+                <table class="table mb-0" id="rolesTable">
+                    <thead>
+                        <tr>
+                            <th>Role Name</th>
+                            <th>Description</th>
+                            <th>Permissions</th>
+                            <th style="width: 80px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var role in Model.Roles)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="font-medium">@role.Name</span>
+                                </td>
+                                <td class="text-muted text-sm">
+                                    @(string.IsNullOrEmpty(role.Description) ? "—" : role.Description)
+                                </td>
+                                <td>
+                                    <a asp-controller="RolePermission" asp-action="Index" asp-route-roleId="@role.Id" 
+                                       class="text-primary text-sm">
+                                        @role.Permissions.Count permissions
+                                    </a>
+                                </td>
+                                <td>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-ghost"
+                                            onclick="editRole('@role.Id', '@role.Name.Replace("'", "\\'")', '@(role.Description?.Replace("'", "\\'") ?? "")')"
+                                            data-bs-toggle="tooltip" 
+                                            title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-person-badge empty-state-icon"></i>
+                    <h5 class="empty-state-title">No roles found</h5>
+                    <p class="empty-state-text">Create your first role for the @Model.Module module.</p>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRoleModal">
+                        <i class="bi bi-plus"></i> Create Role
+                    </button>
+                </div>
+            }
         </div>
     </div>
+}
+
+<!-- Create Role Modal -->
+<div class="modal fade" id="createRoleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-action="Create">
+                <input type="hidden" name="Module" value="@Model.Module" />
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Module</label>
+                        <input class="form-control" value="@Model.Module" readonly disabled />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Role Name</label>
+                        <input name="Name" class="form-control" placeholder="e.g. Manager" required />
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Description</label>
+                        <textarea name="Description" class="form-control" rows="2" placeholder="Optional description"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Role</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Role Modal -->
+<div class="modal fade" id="editRoleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-action="Update">
+                <input type="hidden" id="edit_roleId" name="roleId" />
+                <input type="hidden" name="module" value="@Model.Module" />
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Module</label>
+                        <input class="form-control" value="@Model.Module" readonly disabled />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Role Name</label>
+                        <input id="edit_name" name="Name" class="form-control" required />
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Description</label>
+                        <textarea id="edit_description" name="Description" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function editRole(id, name, description) {
+            document.getElementById('edit_roleId').value = id;
+            document.getElementById('edit_name').value = name;
+            document.getElementById('edit_description').value = description;
+            
+            var modal = new bootstrap.Modal(document.getElementById('editRoleModal'));
+            modal.show();
+        }
+    </script>
 }
