@@ -135,16 +135,28 @@
                         </div>
                     </div>
                     <div class="card-footer d-flex gap-2">
-                        <a href="http://@service.Address:@service.Port/health" 
-                           target="_blank" 
-                           class="btn btn-sm btn-secondary flex-fill">
-                            <i class="bi bi-heart-pulse"></i> Health
-                        </a>
-                        <a href="http://@service.Address:@service.Port/swagger" 
-                           target="_blank" 
-                           class="btn btn-sm btn-primary flex-fill">
-                            <i class="bi bi-book"></i> API Docs
-                        </a>
+                        @if (service.Address != "N/A")
+                        {
+                            <a href="http://@service.Address:@service.Port/health" 
+                               target="_blank" 
+                               class="btn btn-sm btn-secondary flex-fill">
+                                <i class="bi bi-heart-pulse"></i> Health
+                            </a>
+                            <a href="http://@service.Address:@service.Port/swagger" 
+                               target="_blank" 
+                               class="btn btn-sm btn-primary flex-fill">
+                                <i class="bi bi-book"></i> API Docs
+                            </a>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-outline-secondary flex-fill" disabled title="Service is currently offline">
+                                <i class="bi bi-heart-pulse"></i> Offline
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary flex-fill" disabled title="Service is currently offline">
+                                <i class="bi bi-book"></i> No Docs
+                            </button>
+                        }
                     </div>
                 </div>
             </div>
