@@ -15,6 +15,107 @@
     Flatten(Model.Permissions);
 }
 
+<style>
+    /* Tree View Styles */
+    .permission-tree {
+        user-select: none;
+    }
+    .tree-node {
+        margin-left: 20px;
+        position: relative;
+    }
+    .tree-node:before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: -15px;
+        border-left: 1px solid #dee2e6;
+        border-bottom: 1px solid #dee2e6;
+        width: 15px;
+        height: 25px;
+    }
+    .tree-node:after {
+        content: "";
+        position: absolute;
+        top: 15px;
+        left: -15px;
+        border-left: 1px solid #dee2e6;
+        height: 100%;
+    }
+    .tree-node:last-child:after {
+        display: none;
+    }
+    .node-content {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 6px;
+        transition: all 0.2s;
+        cursor: pointer;
+        margin-bottom: 4px;
+        background: white;
+        border: 1px solid transparent;
+    }
+    .node-content:hover {
+        background: #f8f9fa;
+        border-color: #e9ecef;
+        transform: translateX(4px);
+    }
+    .node-icon {
+        font-size: 1.1rem;
+        margin-right: 10px;
+        color: #6c757d;
+    }
+    .node-details {
+        display: flex;
+        flex-direction: column;
+    }
+    .node-name {
+        font-weight: 500;
+        font-family: var(--bs-font-monospace);
+        font-size: 0.9rem;
+    }
+    .node-desc {
+        font-size: 0.75rem;
+        color: #adb5bd;
+    }
+    .node-inactive .node-content {
+        opacity: 0.6;
+        background: #f1f3f5;
+    }
+    
+    /* Context Menu */
+    .context-menu {
+        position: fixed;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        padding: 6px;
+        min-width: 180px;
+        z-index: 10000;
+        display: none;
+        border: 1px solid #e9ecef;
+    }
+    .context-menu-item {
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.85rem;
+        transition: background 0.2s;
+    }
+    .context-menu-item:hover {
+        background: #f1f3f5;
+    }
+    .context-menu-divider {
+        height: 1px;
+        background: #e9ecef;
+        margin: 4px 6px;
+    }
+</style>
+
 @functions {
     public async Task RenderPermissionRow(IdentityService.Web.ViewModels.PermissionViewModel permission, int level = 0)
     {
@@ -97,28 +198,37 @@
                 </select>
             </form>
             
-            @if (!string.IsNullOrEmpty(Model.SelectedModule))
-            {
-                <div class="d-flex gap-2 ms-4">
-                    <a asp-action="Index" asp-route-module="@Model.SelectedModule" 
-                       class="btn btn-sm @(string.IsNullOrEmpty(Model.StatusFilter) ? "btn-primary" : "btn-secondary")">
-                        All
-                    </a>
-                    <a asp-action="Index" asp-route-module="@Model.SelectedModule" asp-route-status="active"
-                       class="btn btn-sm @(Model.StatusFilter == "active" ? "btn-primary" : "btn-secondary")">
-                        Active
-                    </a>
-                    <a asp-action="Index" asp-route-module="@Model.SelectedModule" asp-route-status="inactive"
-                       class="btn btn-sm @(Model.StatusFilter == "inactive" ? "btn-primary" : "btn-secondary")">
-                        Inactive
-                    </a>
+        @if (!string.IsNullOrEmpty(Model.SelectedModule))
+        {
+            <div class="d-flex gap-2 ms-4">
+                <a asp-action="Index" asp-route-module="@Model.SelectedModule" 
+                   class="btn btn-sm @(string.IsNullOrEmpty(Model.StatusFilter) ? "btn-primary" : "btn-secondary")">
+                    All
+                </a>
+                <a asp-action="Index" asp-route-module="@Model.SelectedModule" asp-route-status="active"
+                   class="btn btn-sm @(Model.StatusFilter == "active" ? "btn-primary" : "btn-secondary")">
+                    Active
+                </a>
+                <a asp-action="Index" asp-route-module="@Model.SelectedModule" asp-route-status="inactive"
+                   class="btn btn-sm @(Model.StatusFilter == "inactive" ? "btn-primary" : "btn-secondary")">
+                    Inactive
+                </a>
+            </div>
+            
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" id="btnTableView" onclick="setView('table')">
+                        <i class="bi bi-table me-1"></i> Table
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="btnTreeView" onclick="setView('tree')">
+                        <i class="bi bi-diagram-3 me-1"></i> Tree
+                    </button>
                 </div>
-                
-                <span class="text-muted text-sm ms-auto">
+                <span class="text-muted text-sm">
                     <strong>@flattenedPermissions.Count</strong> permissions
                 </span>
-            }
-        </div>
+            </div>
+        }
     </div>
 </div>
 
@@ -134,7 +244,8 @@
 }
 else
 {
-    <div class="card">
+    <!-- Table View -->
+    <div id="tableView" class="card">
         <div class="card-body p-0">
             @if (Model.Permissions.Any())
             {
@@ -176,6 +287,65 @@ else
                             <i class="bi bi-plus"></i> Add Permission
                         </button>
                     }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Tree View -->
+    <div id="treeView" class="card d-none">
+        <div class="card-body p-4">
+            @if (Model.Permissions.Any())
+            {
+                <div class="permission-tree">
+                    @{
+                        async Task RenderTreeNode(IdentityService.Web.ViewModels.PermissionViewModel node)
+                        {
+                            <div class="tree-node @(!node.IsActive ? "node-inactive" : "")" 
+                                 data-id="@node.Id" 
+                                 data-name="@node.Name"
+                                 data-description="@node.Description"
+                                 data-parentid="@node.ParentId"
+                                 data-isactive="@node.IsActive.ToString().ToLower()"
+                                 oncontextmenu="showContextMenu(event, this)">
+                                <div class="node-content">
+                                    <i class="bi @(node.Children.Any() ? "bi-folder2-open" : "bi-file-earmark-lock2") node-icon"></i>
+                                    <div class="node-details">
+                                        <span class="node-name">@node.Name</span>
+                                        @if (!string.IsNullOrEmpty(node.Description))
+                                        {
+                                            <span class="node-desc">@node.Description</span>
+                                        }
+                                    </div>
+                                    @if (!node.IsActive)
+                                    {
+                                        <span class="badge badge-soft-danger ms-2">Inactive</span>
+                                    }
+                                </div>
+                                @if (node.Children.Any())
+                                {
+                                    <div class="node-children">
+                                        @foreach (var child in node.Children)
+                                        {
+                                            await RenderTreeNode(child);
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        foreach (var root in Model.Permissions)
+                        {
+                            await RenderTreeNode(root);
+                        }
+                    }
+                </div>
+            }
+            else
+            {
+                 <div class="empty-state">
+                    <i class="bi bi-diagram-3 empty-state-icon"></i>
+                    <h5 class="empty-state-title">No permissions to display</h5>
                 </div>
             }
         </div>
@@ -268,8 +438,84 @@ else
     </div>
 </div>
 
+<!-- Context Menu -->
+<div id="treeContextMenu" class="context-menu">
+    <div class="context-menu-item" onclick="handleContextMenuAction('add-sub')">
+        <i class="bi bi-plus-circle text-primary"></i> Add Sub-permission
+    </div>
+    <div class="context-menu-item" onclick="handleContextMenuAction('edit')">
+        <i class="bi bi-pencil"></i> Edit Permission
+    </div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item text-danger" onclick="handleContextMenuAction('toggle')">
+        <i class="bi bi-power"></i> Toggle Status
+    </div>
+</div>
+
 @section Scripts {
     <script>
+        let currentContextMenuNode = null;
+
+        function setView(view) {
+            if (view === 'table') {
+                $('#tableView').removeClass('d-none');
+                $('#treeView').addClass('d-none');
+                $('#btnTableView').addClass('active');
+                $('#btnTreeView').removeClass('active');
+            } else {
+                $('#tableView').addClass('d-none');
+                $('#treeView').removeClass('d-none');
+                $('#btnTableView').removeClass('active');
+                $('#btnTreeView').addClass('active');
+            }
+            localStorage.setItem('permissionViewMode', view);
+        }
+
+        function showContextMenu(e, el) {
+            e.preventDefault();
+            const node = $(el);
+            currentContextMenuNode = {
+                id: node.data('id'),
+                name: node.data('name'),
+                description: node.data('description'),
+                parentId: node.data('parentid'),
+                isActive: node.data('isactive')
+            };
+            
+            const menu = document.getElementById('treeContextMenu');
+            menu.style.display = 'block';
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+            
+            // Close menu on click outside
+            document.addEventListener('click', hideContextMenu);
+        }
+
+        function hideContextMenu() {
+            document.getElementById('treeContextMenu').style.display = 'none';
+            document.removeEventListener('click', hideContextMenu);
+        }
+
+        function handleContextMenuAction(action) {
+            if (!currentContextMenuNode) return;
+            
+            if (action === 'add-sub') {
+                createSubPermission(currentContextMenuNode.id);
+            } else if (action === 'edit') {
+                editPermission(
+                    currentContextMenuNode.id, 
+                    currentContextMenuNode.name, 
+                    currentContextMenuNode.description, 
+                    currentContextMenuNode.parentId, 
+                    currentContextMenuNode.isActive
+                );
+            } else if (action === 'toggle') {
+                document.getElementById('toggle_' + currentContextMenuNode.id).submit();
+            }
+            
+            hideContextMenu();
+        }
+
         function editPermission(id, name, description, parentId, isActive) {
             document.getElementById('edit_id').value = id;
             document.getElementById('edit_name').value = name;
@@ -288,14 +534,16 @@ else
         }
         
         $(document).ready(function() {
+            // Restore view mode
+            const savedView = localStorage.getItem('permissionViewMode') || 'table';
+            setView(savedView);
+
             // Initialize tooltips
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl)
             });
             
-            // DataTable only if not tree view or if we want it? 
-            // Better to disable search/sorting if we want to maintain tree order
             if ($('#permissionsTable tbody tr').length > 50) {
                  $('#permissionsTable').DataTable({
                     paging: false,
