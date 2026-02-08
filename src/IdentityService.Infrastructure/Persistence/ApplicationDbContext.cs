@@ -17,6 +17,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<Module> Modules => Set<Module>();
     public DbSet<LdapConfiguration> LdapConfigurations => Set<LdapConfiguration>();
+    public DbSet<UserModuleRestriction> UserModuleRestrictions => Set<UserModuleRestriction>();
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -40,5 +41,23 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
         {
             entity.HasIndex(e => e.Name).IsUnique();
         });
+
+        builder.Entity<UserModuleRestriction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            entity.HasIndex(e => new { e.UserId, e.ModuleId }).IsUnique();
+            
+            entity.HasOne(d => d.User)
+                .WithMany(p => p.ModuleRestrictions)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(d => d.Module)
+                .WithMany()
+                .HasForeignKey(d => d.ModuleId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
+

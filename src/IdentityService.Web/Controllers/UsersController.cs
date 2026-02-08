@@ -1,3 +1,4 @@
+using IdentityService.Application.Interfaces;
 using IdentityService.Domain.Entities;
 using IdentityService.Web.ViewModels;
 using IdentitySolution.Shared.Events;
@@ -15,15 +16,18 @@ public class UsersController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IApplicationDbContext _context;
 
     public UsersController(
         UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        IApplicationDbContext context)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _publishEndpoint = publishEndpoint;
+        _context = context;
     }
 
     [HttpGet]
@@ -145,9 +149,6 @@ public class UsersController : Controller
     [HttpPost]
     public async Task<IActionResult> Edit(EditUserViewModel model)
     {
-        // Don't validate UserName/Email duplication for simplicity unless changed, assuming readonly in typical implementations or managed carefully. 
-        // Here we just update IsActive and Roles as per the original PageModel logic I saw.
-        
         var user = await _userManager.FindByIdAsync(model.Id);
         if (user == null) return NotFound();
 
@@ -169,7 +170,6 @@ public class UsersController : Controller
 
         if (hasChanges || toAdd.Any() || toRemove.Any())
         {
-             // Get final roles for event
             var finalRoles = await _userManager.GetRolesAsync(user);
 
             await _publishEndpoint.Publish<IUserUpdated>(new 
@@ -186,4 +186,93 @@ public class UsersController : Controller
         TempData["SuccessMessage"] = "User updated successfully";
         return RedirectToAction("Index");
     }
+
+    [HttpGet]
+    public async Task<IActionResult> ModuleRestrictions(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null) return NotFound();
+
+        // Get all active modules from the database
+        var allModules = await _context.Modules
+            .Where(m => m.IsActive)
+            .OrderBy(m => m.Name)
+            .ToListAsync();
+            
+        var restrictedModuleIds = await _context.UserModuleRestrictions
+            .Where(r => r.UserId == id)
+            .Select(r => r.ModuleId)
+            .ToListAsync();
+
+        var model = new UserModuleRestrictionsViewModel
+        {
+            UserId = user.Id,
+            UserName = user.UserName ?? "",
+            FullName = user.FullName ?? "",
+            Modules = allModules.Select(m => new ModuleRestrictionItem
+            {
+                ModuleId = m.Id,
+                ModuleName = m.Name,
+                IsRestricted = restrictedModuleIds.Contains(m.Id)
+            }).ToList()
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ModuleRestrictions(UserModuleRestrictionsViewModel model)
+    {
+        var user = await _userManager.FindByIdAsync(model.UserId);
+        if (user == null) return NotFound();
+
+        // Get current restrictions
+        var currentRestrictions = await _context.UserModuleRestrictions
+            .Where(r => r.UserId == model.UserId)
+            .ToListAsync();
+
+        // Find what to add and remove
+        var newRestrictedModuleIds = model.Modules
+            .Where(m => m.IsRestricted)
+            .Select(m => m.ModuleId)
+            .ToList();
+
+        var currentRestrictedModuleIds = currentRestrictions
+            .Select(r => r.ModuleId)
+            .ToList();
+
+        // Remove restrictions that are no longer selected
+        var toRemove = currentRestrictions
+            .Where(r => !newRestrictedModuleIds.Contains(r.ModuleId))
+            .ToList();
+        
+        // Add new restrictions
+        var toAdd = newRestrictedModuleIds
+            .Where(id => !currentRestrictedModuleIds.Contains(id))
+            .Select(id => new UserModuleRestriction
+            {
+                UserId = model.UserId,
+                ModuleId = id,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = User.Identity?.Name
+            })
+            .ToList();
+
+        if (toRemove.Any())
+        {
+            _context.UserModuleRestrictions.RemoveRange(toRemove);
+        }
+
+        if (toAdd.Any())
+        {
+            await _context.UserModuleRestrictions.AddRangeAsync(toAdd);
+        }
+
+        await _context.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = "Module restrictions updated successfully";
+        return RedirectToAction("Index");
+    }
 }
+
+

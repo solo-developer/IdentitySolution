@@ -10,4 +10,8 @@ public class ApplicationUser : IdentityUser
     // LDAP Integration
     public bool IsLdapUser { get; set; }
     public string? LdapDistinguishedName { get; set; }
+    
+    // Module Restrictions - modules this user cannot access
+    public ICollection<UserModuleRestriction> ModuleRestrictions { get; set; } = new List<UserModuleRestriction>();
 }
+

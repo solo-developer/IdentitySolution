@@ -82,6 +82,12 @@
                                        title="Edit user">
                                         <i class="bi bi-pencil"></i>
                                     </a>
+                                    <a asp-action="ModuleRestrictions" asp-route-id="@user.Id" 
+                                       class="btn btn-sm btn-ghost" 
+                                       data-bs-toggle="tooltip" 
+                                       title="Module access restrictions">
+                                        <i class="bi bi-shield-lock"></i>
+                                    </a>
                                 </div>
                             </td>
                         </tr>

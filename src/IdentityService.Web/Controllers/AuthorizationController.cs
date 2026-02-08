@@ -11,10 +11,12 @@ using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using IdentityService.Domain.Entities;
+using IdentityService.Application.Interfaces;
 using System.Linq;
 using MassTransit;
 using IdentitySolution.Shared.Events;
 using IdentityService.Domain.Constants;
+using Microsoft.EntityFrameworkCore;
 
 namespace IdentityService.Web.Controllers;
 
@@ -25,19 +27,22 @@ public class AuthorizationController : Controller
     private readonly IOpenIddictApplicationManager _applicationManager;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly ILogger<AuthorizationController> _logger;
+    private readonly IApplicationDbContext _context;
 
     public AuthorizationController(
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
         IOpenIddictApplicationManager applicationManager,
         IPublishEndpoint publishEndpoint,
-        ILogger<AuthorizationController> logger)
+        ILogger<AuthorizationController> logger,
+        IApplicationDbContext context)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _applicationManager = applicationManager;
         _publishEndpoint = publishEndpoint;
         _logger = logger;
+        _context = context;
     }
 
     [HttpGet("~/connect/authorize")]
@@ -88,6 +93,35 @@ public class AuthorizationController : Controller
         // Retrieve the profile of the logged in user.
         var user = await _userManager.GetUserAsync(result.Principal) ??
             throw new InvalidOperationException("The user details cannot be retrieved.");
+
+        // Check if user is restricted from accessing this module
+        var clientId = request.ClientId;
+        if (!string.IsNullOrEmpty(clientId))
+        {
+            // Get the module name from the OpenIddict application display name
+            var application = await _applicationManager.FindByClientIdAsync(clientId);
+            var moduleName = application != null 
+                ? await _applicationManager.GetDisplayNameAsync(application) ?? clientId
+                : clientId;
+
+            // Find the module in our database
+            var module = await _context.Modules
+                .FirstOrDefaultAsync(m => m.Name == moduleName);
+
+            if (module != null)
+            {
+                // Check if user is restricted from this module
+                var isRestricted = await _context.UserModuleRestrictions
+                    .AnyAsync(r => r.UserId == user.Id && r.ModuleId == module.Id);
+
+                if (isRestricted)
+                {
+                    _logger.LogWarning("User {User} is restricted from accessing module {Module}", user.UserName, moduleName);
+                    ViewData["ModuleName"] = moduleName;
+                    return View("~/Views/Account/AccessDenied.cshtml");
+                }
+            }
+        }
 
         // Create a new ClaimsPrincipal containing the claims that will be used to create an id_token, a token or a code.
         var principal = await _signInManager.CreateUserPrincipalAsync(user);

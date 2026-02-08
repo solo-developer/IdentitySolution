@@ -27,3 +27,20 @@ public class EditUserViewModel
     // Grouped Roles for UI (Module -> Roles)
     public Dictionary<string, List<RoleDto>> GroupedRoles { get; set; } = new();
 }
+
+public class UserModuleRestrictionsViewModel
+{
+    public string UserId { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    
+    public List<ModuleRestrictionItem> Modules { get; set; } = new();
+}
+
+public class ModuleRestrictionItem
+{
+    public Guid ModuleId { get; set; }
+    public string ModuleName { get; set; } = string.Empty;
+    public bool IsRestricted { get; set; }
+}
+

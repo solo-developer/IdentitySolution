@@ -1,0 +1,154 @@
+@model IdentityService.Web.ViewModels.UserModuleRestrictionsViewModel
+@{
+    ViewData["Title"] = "Module Access Restrictions";
+}
+
+<div class="page-header">
+    <div>
+        <div class="breadcrumb">
+            <a asp-action="Index">Users</a> / Module Restrictions
+        </div>
+        <h1 class="page-title">Module Access for @Model.FullName</h1>
+        <p class="page-description">Select modules to block SSO access for this user</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">User Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="text-muted text-xs mb-1">Full Name</div>
+                    <div class="font-medium">@Model.FullName</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted text-xs mb-1">Username</div>
+                    <code>@Model.UserName</code>
+                </div>
+                <div>
+                    <div class="text-muted text-xs mb-1">User ID</div>
+                    <code class="text-xs">@Model.UserId</code>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <div class="d-flex align-items-start gap-3">
+                    <i class="bi bi-info-circle text-muted"></i>
+                    <div class="text-sm text-muted">
+                        <strong>How it works:</strong> When a module is checked, the user will be denied SSO access to that module. 
+                        They will see an "Access Denied" page when trying to login via SSO from that module.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <form method="post" asp-action="ModuleRestrictions">
+            <input type="hidden" asp-for="UserId" />
+            <input type="hidden" asp-for="UserName" />
+            <input type="hidden" asp-for="FullName" />
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Module Restrictions</h5>
+                    <span class="text-muted text-sm">
+                        <span id="restrictedCount">@Model.Modules.Count(m => m.IsRestricted)</span> of @Model.Modules.Count blocked
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Modules.Any())
+                    {
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">Block</th>
+                                    <th>Module</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.Modules.Count; i++)
+                                {
+                                    var module = Model.Modules[i];
+                                    <tr>
+                                        <td class="text-center">
+                                            <input type="hidden" name="Modules[@i].ModuleId" value="@module.ModuleId" />
+                                            <input type="hidden" name="Modules[@i].ModuleName" value="@module.ModuleName" />
+                                            <input type="checkbox" 
+                                                   name="Modules[@i].IsRestricted" 
+                                                   value="true"
+                                                   class="form-check-input restriction-checkbox"
+                                                   @(module.IsRestricted ? "checked" : "") />
+                                        </td>
+                                        <td>
+                                            <span class="font-medium">@module.ModuleName</span>
+                                        </td>
+                                        <td>
+                                            @if (module.IsRestricted)
+                                            {
+                                                <span class="badge badge-danger">Blocked</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-success">Allowed</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="bi bi-hdd-network empty-state-icon"></i>
+                            <h5 class="empty-state-title">No modules found</h5>
+                            <p class="empty-state-text">No modules are registered in the system.</p>
+                        </div>
+                    }
+                </div>
+                @if (Model.Modules.Any())
+                {
+                    <div class="card-footer d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check"></i> Save Restrictions
+                        </button>
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function updateCount() {
+            const count = document.querySelectorAll('.restriction-checkbox:checked').length;
+            document.getElementById('restrictedCount').textContent = count;
+            
+            // Update status badges
+            document.querySelectorAll('.restriction-checkbox').forEach(cb => {
+                const row = cb.closest('tr');
+                const badge = row.querySelector('.badge');
+                if (cb.checked) {
+                    badge.className = 'badge badge-danger';
+                    badge.textContent = 'Blocked';
+                } else {
+                    badge.className = 'badge badge-success';
+                    badge.textContent = 'Allowed';
+                }
+            });
+        }
+        
+        document.querySelectorAll('.restriction-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateCount);
+        });
+    </script>
+}

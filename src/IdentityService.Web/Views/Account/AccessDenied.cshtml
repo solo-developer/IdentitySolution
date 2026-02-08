@@ -1,0 +1,33 @@
+@{
+    ViewData["Title"] = "Access Denied";
+    Layout = "_AuthLayout";
+    var moduleName = ViewData["ModuleName"]?.ToString() ?? "this module";
+}
+
+<div class="auth-card" style="max-width: 500px;">
+    <div class="auth-header" style="background: #dc2626;">
+        <div class="auth-logo" style="background: rgba(255,255,255,0.2);">
+            <i class="bi bi-shield-x"></i>
+        </div>
+        <h1 class="auth-title">Access Denied</h1>
+        <p class="auth-subtitle">Authorization error</p>
+    </div>
+    
+    <div class="auth-body">
+        <div class="text-center mb-4">
+            <p class="text-muted">
+                Your account does not have permission to access <strong>@moduleName</strong>.
+            </p>
+            <p class="text-sm text-muted">
+                If you believe this is an error, please contact your system administrator.
+            </p>
+        </div>
+        
+        <div class="d-flex gap-3">
+            <a href="/" class="btn btn-secondary flex-fill">Go to Dashboard</a>
+            <form asp-controller="Account" asp-action="Logout" method="post" class="flex-fill">
+                <button type="submit" class="btn btn-primary w-100">Sign Out</button>
+            </form>
+        </div>
+    </div>
+</div>

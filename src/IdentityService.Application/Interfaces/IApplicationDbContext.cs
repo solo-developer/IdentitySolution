@@ -11,6 +11,7 @@ public interface IApplicationDbContext
     DbSet<RolePermission> RolePermissions { get; }
     DbSet<Module> Modules { get; }
     DbSet<LdapConfiguration> LdapConfigurations { get; }
+    DbSet<UserModuleRestriction> UserModuleRestrictions { get; }
     
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
