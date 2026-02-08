@@ -13,6 +13,9 @@ public class Permission
     
     public Guid? ModuleId { get; set; }
     public virtual Module ModuleEntity { get; set; }
-
+    
+    public Guid? ParentId { get; set; }
+    public virtual Permission? Parent { get; set; }
+    public virtual ICollection<Permission> Children { get; set; } = new List<Permission>();
     public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
 }

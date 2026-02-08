@@ -51,17 +51,22 @@ public class PermissionsController : Controller
                 query = query.Where(p => !p.IsActive);
             }
 
-            model.Permissions = await query
+            var allPermissions = await _context.Permissions
+                .Include(p => p.Parent)
+                .Where(p => p.Module == module)
                 .OrderBy(p => p.Name)
-                .Select(p => new PermissionViewModel
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    Module = p.Module,
-                    IsActive = p.IsActive
-                })
                 .ToListAsync();
+
+            if (status == "active")
+            {
+                allPermissions = allPermissions.Where(p => p.IsActive).ToList();
+            }
+            else if (status == "inactive")
+            {
+                allPermissions = allPermissions.Where(p => !p.IsActive).ToList();
+            }
+
+            model.Permissions = BuildPermissionHierarchy(allPermissions);
         }
         else
         {
@@ -107,7 +112,8 @@ public class PermissionsController : Controller
             Description = request.Description,
             Module = request.Module,
             ModuleId = moduleEntity.Id,
-            IsActive = true
+            IsActive = true,
+            ParentId = request.ParentId
         };
 
         _context.Permissions.Add(permission);
@@ -120,7 +126,8 @@ public class PermissionsController : Controller
             Name = permission.Name,
             Description = permission.Description,
             Module = permission.Module,
-            IsActive = permission.IsActive
+            IsActive = permission.IsActive,
+            ParentId = permission.ParentId
         });
 
         TempData["SuccessMessage"] = "Permission created successfully";
@@ -139,6 +146,7 @@ public class PermissionsController : Controller
         permission.Name = request.Name;
         permission.Description = request.Description;
         permission.IsActive = request.IsActive;
+        permission.ParentId = request.ParentId;
 
         await _context.SaveChangesAsync();
 
@@ -149,7 +157,8 @@ public class PermissionsController : Controller
             Name = permission.Name,
             Description = permission.Description,
             Module = permission.Module,
-            IsActive = permission.IsActive
+            IsActive = permission.IsActive,
+            ParentId = permission.ParentId
         });
 
         TempData["SuccessMessage"] = "Permission updated successfully";
@@ -175,10 +184,29 @@ public class PermissionsController : Controller
             Name = permission.Name,
             Description = permission.Description,
             Module = permission.Module,
-            IsActive = permission.IsActive
+            IsActive = permission.IsActive,
+            ParentId = permission.ParentId
         });
 
         TempData["SuccessMessage"] = $"Permission {(permission.IsActive ? "enabled" : "disabled")} successfully";
         return RedirectToAction("Index", new { module = permission.Module });
+    }
+
+    private List<PermissionViewModel> BuildPermissionHierarchy(List<Permission> permissions, Guid? parentId = null)
+    {
+        return permissions
+            .Where(p => p.ParentId == parentId)
+            .Select(p => new PermissionViewModel
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Module = p.Module,
+                IsActive = p.IsActive,
+                ParentId = p.ParentId,
+                ParentName = p.Parent?.Name,
+                Children = BuildPermissionHierarchy(permissions, p.Id)
+            })
+            .ToList();
     }
 }

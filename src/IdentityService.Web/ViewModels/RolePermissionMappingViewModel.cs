@@ -9,5 +9,5 @@ public class RolePermissionMappingViewModel
     public List<RoleDto> RolesInModule { get; set; } = new();
     public string? SelectedRoleId { get; set; }
     public string? SelectedRoleName { get; set; }
-    public Dictionary<string, List<PermissionTreeNode>> PermissionTree { get; set; } = new();
+    public List<PermissionTreeNode> PermissionTree { get; set; } = new();
 }

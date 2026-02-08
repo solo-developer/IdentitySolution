@@ -1,7 +1,66 @@
 @model IdentityService.Web.ViewModels.RolePermissionMappingViewModel
 @{
     ViewData["Title"] = "Role Permission Mapping";
-    var allPermissions = Model.PermissionTree.Values.SelectMany(p => p).ToList();
+    
+    // Helper to count total permissions for summary
+    int CountPermissions(IEnumerable<IdentityService.Web.ViewModels.PermissionTreeNode> nodes)
+    {
+        int count = 0;
+        foreach (var node in nodes)
+        {
+            count++;
+            count += CountPermissions(node.Children);
+        }
+        return count;
+    }
+
+    int CountAssigned(IEnumerable<IdentityService.Web.ViewModels.PermissionTreeNode> nodes)
+    {
+        int count = 0;
+        foreach (var node in nodes)
+        {
+            if (node.IsAssigned) count++;
+            count += CountAssigned(node.Children);
+        }
+        return count;
+    }
+
+    var totalPermissions = CountPermissions(Model.PermissionTree);
+    var assignedCount = CountAssigned(Model.PermissionTree);
+}
+
+@functions {
+    public async Task RenderPermissionTree(IEnumerable<IdentityService.Web.ViewModels.PermissionTreeNode> nodes, int level = 0)
+    {
+        @foreach (var node in nodes)
+        {
+            <tr>
+                <td class="text-center">
+                    <input type="checkbox" 
+                           name="selectedPermissions" 
+                           value="@node.Id"
+                           class="form-check-input permission-checkbox"
+                           @(node.IsAssigned ? "checked" : "") />
+                </td>
+                <td>
+                    <div style="padding-left: @(level * 25)px;" class="d-flex align-items-center">
+                        @if (level > 0)
+                        {
+                            <i class="bi bi-arrow-return-right text-muted me-2 small"></i>
+                        }
+                        <code>@node.Name</code>
+                    </div>
+                </td>
+                <td class="text-muted text-sm">
+                    @(string.IsNullOrEmpty(node.Description) ? "—" : node.Description)
+                </td>
+            </tr>
+            @if (node.Children.Any())
+            {
+                await RenderPermissionTree(node.Children, level + 1);
+            }
+        }
+    }
 }
 
 <div class="page-header">
@@ -20,7 +79,7 @@
             </div>
             <div class="card-body">
                 <form method="get" asp-action="Index" id="roleForm">
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label class="form-label">Module</label>
                         <select name="module" id="moduleSelect" class="form-select" onchange="this.form.submit()">
                             <option value="">Select module</option>
@@ -65,7 +124,7 @@
                     </div>
                     <div class="d-flex justify-content-between">
                         <span class="text-muted">Assigned</span>
-                        <span class="font-semibold" id="assignedCount">@allPermissions.Count(p => p.IsAssigned)</span>
+                        <span class="font-semibold" id="assignedCount">@assignedCount</span>
                     </div>
                 </div>
             </div>
@@ -86,7 +145,7 @@
         }
         else
         {
-            <form method="post" asp-action="UpdatePermissions">
+            <form method="post" asp-action="Assign">
                 <input type="hidden" name="roleId" value="@Model.SelectedRoleId" />
                 <input type="hidden" name="module" value="@Model.SelectedModule" />
                 
@@ -99,7 +158,7 @@
                         </div>
                     </div>
                     <div class="card-body p-0">
-                        @if (allPermissions.Any())
+                        @if (Model.PermissionTree.Any())
                         {
                             <table class="table mb-0">
                                 <thead>
@@ -110,28 +169,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @{int i = 0;}
-                                    @foreach (var permission in allPermissions)
-                                    {
-                                        <tr>
-                                            <td class="text-center">
-                                                <input type="hidden" name="Permissions[@i].PermissionId" value="@permission.Id" />
-                                                <input type="hidden" name="Permissions[@i].Name" value="@permission.Name" />
-                                                <input type="checkbox" 
-                                                       name="Permissions[@i].IsAssigned" 
-                                                       value="true"
-                                                       class="form-check-input permission-checkbox"
-                                                       @(permission.IsAssigned ? "checked" : "") />
-                                            </td>
-                                            <td>
-                                                <code>@permission.Name</code>
-                                            </td>
-                                            <td class="text-muted text-sm">
-                                                @(string.IsNullOrEmpty(permission.Description) ? "—" : permission.Description)
-                                            </td>
-                                        </tr>
-                                        i++;
-                                    }
+                                    @{await RenderPermissionTree(Model.PermissionTree);}
                                 </tbody>
                             </table>
                         }
@@ -147,7 +185,7 @@
                             </div>
                         }
                     </div>
-                    @if (allPermissions.Any())
+                    @if (Model.PermissionTree.Any())
                     {
                         <div class="card-footer d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary">

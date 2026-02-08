@@ -18,6 +18,10 @@ public class PermissionViewModel
     public string Module { get; set; } = string.Empty;
     
     public bool IsActive { get; set; } = true;
+    
+    public Guid? ParentId { get; set; }
+    public string? ParentName { get; set; }
+    public List<PermissionViewModel> Children { get; set; } = new();
 }
 
 public class CreatePermissionRequest
@@ -31,6 +35,8 @@ public class CreatePermissionRequest
     
     [Required]
     public string Module { get; set; } = string.Empty;
+    
+    public Guid? ParentId { get; set; }
 }
 
 public class UpdatePermissionRequest
@@ -43,6 +49,8 @@ public class UpdatePermissionRequest
     public string Description { get; set; } = string.Empty;
     
     public bool IsActive { get; set; }
+    
+    public Guid? ParentId { get; set; }
 }
 
 public class PermissionTreeNode

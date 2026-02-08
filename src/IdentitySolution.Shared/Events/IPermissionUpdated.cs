@@ -7,4 +7,5 @@ public interface IPermissionUpdated
     string Description { get; }
     string Module { get; }
     bool IsActive { get; }
+    Guid? ParentId { get; }
 }

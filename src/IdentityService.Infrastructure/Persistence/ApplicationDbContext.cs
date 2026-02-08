@@ -37,6 +37,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
                 .HasForeignKey(d => d.PermissionId);
         });
 
+        builder.Entity<Permission>(entity =>
+        {
+            entity.HasOne(p => p.Parent)
+                .WithMany(p => p.Children)
+                .HasForeignKey(p => p.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.ModuleEntity)
+                .WithMany()
+                .HasForeignKey(p => p.ModuleId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         builder.Entity<Module>(entity =>
         {
             entity.HasIndex(e => e.Name).IsUnique();

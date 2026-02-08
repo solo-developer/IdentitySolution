@@ -1,6 +1,72 @@
 @model IdentityService.Web.ViewModels.PermissionListViewModel
 @{
     ViewData["Title"] = "Permissions";
+    
+    // Flatten permissions for the parent dropdown
+    var flattenedPermissions = new List<IdentityService.Web.ViewModels.PermissionViewModel>();
+    void Flatten(IEnumerable<IdentityService.Web.ViewModels.PermissionViewModel> permissions)
+    {
+        foreach (var p in permissions)
+        {
+            flattenedPermissions.Add(p);
+            Flatten(p.Children);
+        }
+    }
+    Flatten(Model.Permissions);
+}
+
+@functions {
+    public async Task RenderPermissionRow(IdentityService.Web.ViewModels.PermissionViewModel permission, int level = 0)
+    {
+        <tr class="@(!permission.IsActive ? "opacity-50" : "")">
+            <td class="text-center">
+                <form method="post" asp-action="ToggleStatus" class="d-inline" id="toggle_@permission.Id">
+                    <input type="hidden" name="permissionId" value="@permission.Id" />
+                    <input type="hidden" name="module" value="@Model.SelectedModule" />
+                    <div class="form-switch">
+                        <input class="form-check-input" 
+                               type="checkbox" 
+                               onchange="document.getElementById('toggle_@permission.Id').submit()"
+                               @(permission.IsActive ? "checked" : "")>
+                    </div>
+                </form>
+            </td>
+            <td>
+                <div style="padding-left: @(level * 25)px;" class="d-flex align-items-center">
+                    @if (level > 0)
+                    {
+                        <i class="bi bi-arrow-return-right text-muted me-2 small"></i>
+                    }
+                    <code>@permission.Name</code>
+                </div>
+            </td>
+            <td class="text-muted text-sm">
+                @(string.IsNullOrEmpty(permission.Description) ? "—" : permission.Description)
+            </td>
+            <td>
+                <div class="d-flex gap-1">
+                    <button type="button" 
+                            class="btn btn-sm btn-ghost"
+                            onclick="editPermission('@permission.Id', '@permission.Name.Replace("'", "\\'")', '@(permission.Description?.Replace("'", "\\'").Replace("\n", " ").Replace("\r", "") ?? "")', '@permission.ParentId', @permission.IsActive.ToString().ToLower())"
+                            data-bs-toggle="tooltip" 
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" 
+                            class="btn btn-sm btn-ghost text-primary"
+                            onclick="createSubPermission('@permission.Id')"
+                            data-bs-toggle="tooltip" 
+                            title="Add Sub-permission">
+                        <i class="bi bi-plus-circle"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+        @foreach (var child in permission.Children)
+        {
+            await RenderPermissionRow(child, level + 1);
+        }
+    }
 }
 
 <div class="page-header">
@@ -49,7 +115,7 @@
                 </div>
                 
                 <span class="text-muted text-sm ms-auto">
-                    <strong>@Model.Permissions.Count</strong> permissions
+                    <strong>@flattenedPermissions.Count</strong> permissions
                 </span>
             }
         </div>
@@ -84,35 +150,7 @@ else
                     <tbody>
                         @foreach (var permission in Model.Permissions)
                         {
-                            <tr class="@(!permission.IsActive ? "opacity-50" : "")">
-                                <td class="text-center">
-                                    <form method="post" asp-action="ToggleStatus" class="d-inline" id="toggle_@permission.Id">
-                                        <input type="hidden" name="permissionId" value="@permission.Id" />
-                                        <input type="hidden" name="module" value="@Model.SelectedModule" />
-                                        <div class="form-switch">
-                                            <input class="form-check-input" 
-                                                   type="checkbox" 
-                                                   onchange="document.getElementById('toggle_@permission.Id').submit()"
-                                                   @(permission.IsActive ? "checked" : "")>
-                                        </div>
-                                    </form>
-                                </td>
-                                <td>
-                                    <code>@permission.Name</code>
-                                </td>
-                                <td class="text-muted text-sm">
-                                    @(string.IsNullOrEmpty(permission.Description) ? "—" : permission.Description)
-                                </td>
-                                <td>
-                                    <button type="button" 
-                                            class="btn btn-sm btn-ghost"
-                                            onclick="editPermission('@permission.Id', '@permission.Name.Replace("'", "\\'")', '@(permission.Description?.Replace("'", "\\'").Replace("\n", " ").Replace("\r", "") ?? "")', @permission.IsActive.ToString().ToLower())"
-                                            data-bs-toggle="tooltip" 
-                                            title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                </td>
-                            </tr>
+                            await RenderPermissionRow(permission);
                         }
                     </tbody>
                 </table>
@@ -153,16 +191,26 @@ else
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="post" asp-action="Create">
-                <input type="hidden" name="Module" value="@Model.SelectedModule" />
+                <input type="hidden" name="CreatePermissionInput.Module" value="@Model.SelectedModule" />
                 <div class="modal-body">
-                    <div class="form-group">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Parent Permission (Optional)</label>
+                        <select name="CreatePermissionInput.ParentId" id="create_parentId" class="form-select">
+                            <option value="">-- No Parent (Root) --</option>
+                            @foreach (var p in flattenedPermissions)
+                            {
+                                <option value="@p.Id">@p.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
                         <label class="form-label required">Permission Name</label>
-                        <input name="Name" class="form-control" placeholder="e.g. CanApproveOrders" required />
+                        <input name="CreatePermissionInput.Name" class="form-control" placeholder="e.g. CanApproveOrders" required />
                         <div class="form-text">Use descriptive names like CanRead, CanWrite, CanDelete</div>
                     </div>
                     <div class="form-group mb-0">
                         <label class="form-label">Description</label>
-                        <textarea name="Description" class="form-control" rows="2" placeholder="Optional description"></textarea>
+                        <textarea name="CreatePermissionInput.Description" class="form-control" rows="2" placeholder="Optional description"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -184,13 +232,23 @@ else
             </div>
             <form method="post" asp-action="Update">
                 <input type="hidden" id="edit_id" name="permissionId" />
-                <input type="hidden" name="module" value="@Model.SelectedModule" />
+                <input type="hidden" name="Module" value="@Model.SelectedModule" />
                 <div class="modal-body">
-                    <div class="form-group">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Parent Permission (Optional)</label>
+                        <select id="edit_parentId" name="ParentId" class="form-select">
+                            <option value="">-- No Parent (Root) --</option>
+                            @foreach (var p in flattenedPermissions)
+                            {
+                                <option value="@p.Id">@p.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
                         <label class="form-label required">Permission Name</label>
                         <input id="edit_name" name="Name" class="form-control" required />
                     </div>
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label class="form-label">Description</label>
                         <textarea id="edit_description" name="Description" class="form-control" rows="2"></textarea>
                     </div>
@@ -212,26 +270,38 @@ else
 
 @section Scripts {
     <script>
-        function editPermission(id, name, description, isActive) {
+        function editPermission(id, name, description, parentId, isActive) {
             document.getElementById('edit_id').value = id;
             document.getElementById('edit_name').value = name;
             document.getElementById('edit_description').value = description;
             document.getElementById('edit_isActive').checked = isActive;
+            document.getElementById('edit_parentId').value = parentId || "";
             
             var modal = new bootstrap.Modal(document.getElementById('editModal'));
             modal.show();
         }
+
+        function createSubPermission(parentId) {
+            document.getElementById('create_parentId').value = parentId;
+            var modal = new bootstrap.Modal(document.getElementById('createModal'));
+            modal.show();
+        }
         
         $(document).ready(function() {
-            if ($('#permissionsTable tbody tr').length > 15) {
-                $('#permissionsTable').DataTable({
-                    pageLength: 50,
-                    order: [[1, 'asc']],
-                    language: {
-                        search: "Search:",
-                        lengthMenu: "Show _MENU_",
-                        info: "_START_ - _END_ of _TOTAL_"
-                    }
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // DataTable only if not tree view or if we want it? 
+            // Better to disable search/sorting if we want to maintain tree order
+            if ($('#permissionsTable tbody tr').length > 50) {
+                 $('#permissionsTable').DataTable({
+                    paging: false,
+                    searching: true,
+                    info: false,
+                    ordering: false
                 });
             }
         });

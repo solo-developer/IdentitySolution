@@ -89,21 +89,8 @@ public class RolePermissionController : Controller
             .Select(rp => rp.PermissionId)
             .ToHashSet();
 
-        // Build permission tree grouped by category (first part of permission name before '.')
-        model.PermissionTree = permissions
-            .GroupBy(p => GetPermissionCategory(p.Name))
-            .OrderBy(g => g.Key)
-            .ToDictionary(
-                g => g.Key,
-                g => g.Select(p => new PermissionTreeNode
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    Module = p.Module,
-                    IsAssigned = assignedPermissionIds.Contains(p.Id)
-                }).ToList()
-            );
+        // Build permission tree based on ParentId
+        model.PermissionTree = BuildPermissionTree(permissions, assignedPermissionIds);
 
         return View(model);
     }
@@ -154,10 +141,19 @@ public class RolePermissionController : Controller
         return RedirectToAction("Index", new { module, roleId });
     }
 
-    private string GetPermissionCategory(string permissionName)
+    private List<PermissionTreeNode> BuildPermissionTree(List<Permission> permissions, HashSet<Guid> assignedPermissionIds, Guid? parentId = null)
     {
-        // Extract category from permission name (e.g., "User.Create" -> "User")
-        var parts = permissionName.Split('.');
-        return parts.Length > 1 ? parts[0] : "General";
+        return permissions
+            .Where(p => p.ParentId == parentId)
+            .Select(p => new PermissionTreeNode
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Module = p.Module,
+                IsAssigned = assignedPermissionIds.Contains(p.Id),
+                Children = BuildPermissionTree(permissions, assignedPermissionIds, p.Id)
+            })
+            .ToList();
     }
 }
